@@ -1,0 +1,5 @@
+name: CVVanish
+main: org.cubeville.cvvanish.CVVanish
+version: 0.1
+author: FrediW
+depends: [ CVIPC ]
