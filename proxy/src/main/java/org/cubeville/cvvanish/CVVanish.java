@@ -15,6 +15,7 @@ import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.PlayerDisconnectEvent;
 import net.md_5.bungee.api.event.PostLoginEvent;
+import net.md_5.bungee.api.event.PreLoginEvent;
 import net.md_5.bungee.api.event.ServerConnectedEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
@@ -27,8 +28,7 @@ import net.md_5.bungee.config.YamlConfiguration;
 import net.md_5.bungee.event.EventHandler;
 
 import net.md_5.bungee.protocol.DefinedPacket;
-import net.md_5.bungee.protocol.packet.ScoreboardDisplay;
-import net.md_5.bungee.protocol.packet.Team;
+import net.md_5.bungee.protocol.packet.*;
 import org.cubeville.cvipc.CVIPC;
 import org.cubeville.cvipc.IPCInterface;
 
@@ -57,7 +57,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
 
     private PlayerDataManager playerDataManager;
 
-    public Scoreboard scoreboard;
+    public HashMap<UUID, Team> teams;
     
     @Override
     public void onEnable() {
@@ -94,6 +94,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         team.setPrefix("test");
         team.setSuffix("test");
         scoreboard.addTeam(team);*/
+        teams = new HashMap<>();
     }
 
     public String getPlayerVisibleName(UUID uuid) {
@@ -151,27 +152,33 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
 
     public void initTeam(ProxiedPlayer player) {
         Team team = new Team();
-        team.setName(player.getName());
-        team.setDisplayName(player.getName());
-        team.setNameTagVisibility("always");
-        team.setCollisionRule("always");
+        team.setName("{\"text\":\"" + player.getName() + "\"}");
+        team.setDisplayName("{\"text\":\"" + player.getName() + "\"}");
+        team.setNameTagVisibility("{\"text\":\"always\"}");
+        team.setCollisionRule("{\"text\":\"always\"}");
         team.setFriendlyFire((byte) 0);
-        team.setColor(1);
-        team.setPrefix("test");
-        team.setSuffix("test");
+        team.setColor(4);
+        team.setPrefix("{\"text\":\"test\"}");
+        team.setSuffix("{\"text\":\"test\"}");
         team.setMode((byte) 0);
-        team.setPlayers(new String[] {player.getName()});
-        for(UUID p : connectedPlayers) {
+        team.setPlayers(new String[] {"{\"text\":\"" + player.getName() + "\"}"});
+
+        teams.put(player.getUniqueId(), team);
+
+        /*for(UUID p : connectedPlayers) {
             ProxyServer.getInstance().getPlayer(p).unsafe().sendPacket(team);
-        }
+            //CVTabList.getInstanceFor(p).sendTeam(team, ProxyServer.getInstance().getPlayer(p));
+        }*/
         //ProxyServer.getInstance().getScheduler().schedule(this, () -> addPacketAvailable(player.getUniqueId()), 1, TimeUnit.SECONDS);
         //addPacketAvailable(player.getUniqueId());
     }
 
+    public Team getTeam(UUID uuid) {
+        return teams.get(uuid);
+    }
+
     @EventHandler
     public void onDisconnect(final PlayerDisconnectEvent event) {
-        System.out.println(event.getPlayer().getScoreboard().getName());
-        System.out.println(Arrays.toString(event.getPlayer().getScoreboard().getTeams().toArray()));
         UUID uuid = event.getPlayer().getUniqueId();
         connectedPlayers.remove(uuid);
         actionBarPlayers.remove(uuid);
