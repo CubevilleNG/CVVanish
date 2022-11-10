@@ -3,18 +3,19 @@ package org.cubeville.cvvanish;
 import java.io.File;
 import java.io.IOException;
 
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 
+import net.md_5.bungee.BungeeCord;
+import net.md_5.bungee.ServerConnector;
 import net.md_5.bungee.UserConnection;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.PlayerDisconnectEvent;
 import net.md_5.bungee.api.event.PostLoginEvent;
+import net.md_5.bungee.api.event.ServerConnectedEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
@@ -25,6 +26,7 @@ import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.YamlConfiguration;
 import net.md_5.bungee.event.EventHandler;
 
+import net.md_5.bungee.protocol.DefinedPacket;
 import net.md_5.bungee.protocol.packet.ScoreboardDisplay;
 import net.md_5.bungee.protocol.packet.Team;
 import org.cubeville.cvipc.CVIPC;
@@ -54,6 +56,8 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
     public static CVVanish getInstance() { return instance; }
 
     private PlayerDataManager playerDataManager;
+
+    public Scoreboard scoreboard;
     
     @Override
     public void onEnable() {
@@ -81,6 +85,15 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         actionBarNotifier.start();
 
         instance = this;
+        /*this.scoreboard = new Scoreboard();
+        net.md_5.bungee.api.score.Team team = new net.md_5.bungee.api.score.Team("citizen");
+        team.setNameTagVisibility("always");
+        team.setCollisionRule("always");
+        team.setFriendlyFire((byte) 0);
+        team.setColor(1);
+        team.setPrefix("test");
+        team.setSuffix("test");
+        scoreboard.addTeam(team);*/
     }
 
     public String getPlayerVisibleName(UUID uuid) {
@@ -133,6 +146,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         }
         //ProxyServer.getInstance().getScheduler().schedule(this, () -> initTeam(player), 10, TimeUnit.SECONDS);
         initTeam(player);
+        //this.scoreboard.getTeam("citizen").addPlayer(player.getName());
     }
 
     public void initTeam(ProxiedPlayer player) {
@@ -148,7 +162,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         team.setMode((byte) 0);
         team.setPlayers(new String[] {player.getName()});
         for(UUID p : connectedPlayers) {
-            //ProxyServer.getInstance().getPlayer(p).unsafe().sendPacket(team);
+            ProxyServer.getInstance().getPlayer(p).unsafe().sendPacket(team);
         }
         //ProxyServer.getInstance().getScheduler().schedule(this, () -> addPacketAvailable(player.getUniqueId()), 1, TimeUnit.SECONDS);
         //addPacketAvailable(player.getUniqueId());
@@ -156,6 +170,8 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
 
     @EventHandler
     public void onDisconnect(final PlayerDisconnectEvent event) {
+        System.out.println(event.getPlayer().getScoreboard().getName());
+        System.out.println(Arrays.toString(event.getPlayer().getScoreboard().getTeams().toArray()));
         UUID uuid = event.getPlayer().getUniqueId();
         connectedPlayers.remove(uuid);
         actionBarPlayers.remove(uuid);

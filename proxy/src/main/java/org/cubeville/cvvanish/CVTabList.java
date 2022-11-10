@@ -113,7 +113,7 @@ public class CVTabList extends TabList
                                 item.setGamemode(1);
                                 
                                 //String name = plugin.getPrefix(item.getUuid()) + item.getUsername();  todo was already commented
-                                String name = plugin.getPlayerVisibleName(item.getUuid());
+                                /*String name = plugin.getPlayerVisibleName(item.getUuid());
                                 if(plugin.isPlayerUnlisted(item.getUuid())) {
                                     name = "§m" + name;
                                 } else if(plugin.isPlayerInvisible(item.getUuid())) {
@@ -122,7 +122,7 @@ public class CVTabList extends TabList
                                 //String name = plugin.getPrefix(item.getUuid()) + plugin.getPlayerVisibleName(item.getUuid());
                                 name = plugin.getPrefix(item.getUuid()) + name;
                                 if(name.length() > 16) name = name.substring(0, 16);
-                                item.setUsername(name);
+                                item.setUsername(name);*/
                                 
                                 playerAddPackets.put(item.getUuid(), item);
 
