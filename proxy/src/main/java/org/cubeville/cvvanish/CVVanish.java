@@ -7,20 +7,26 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.TimeUnit;
 
 import net.md_5.bungee.UserConnection;
 import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.PlayerDisconnectEvent;
 import net.md_5.bungee.api.event.PostLoginEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
+import net.md_5.bungee.api.score.Scoreboard;
+import net.md_5.bungee.chat.ComponentSerializer;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.YamlConfiguration;
 import net.md_5.bungee.event.EventHandler;
 
+import net.md_5.bungee.protocol.packet.ScoreboardDisplay;
+import net.md_5.bungee.protocol.packet.Team;
 import org.cubeville.cvipc.CVIPC;
 import org.cubeville.cvipc.IPCInterface;
 
@@ -125,6 +131,27 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
                 CVTabList.getInstanceFor(event.getPlayer().getUniqueId()).showPlayer(connectedPlayer);
             }
         }
+        //ProxyServer.getInstance().getScheduler().schedule(this, () -> initTeam(player), 10, TimeUnit.SECONDS);
+        initTeam(player);
+    }
+
+    public void initTeam(ProxiedPlayer player) {
+        Team team = new Team();
+        team.setName(player.getName());
+        team.setDisplayName(player.getName());
+        team.setNameTagVisibility("always");
+        team.setCollisionRule("always");
+        team.setFriendlyFire((byte) 0);
+        team.setColor(1);
+        team.setPrefix("test");
+        team.setSuffix("test");
+        team.setMode((byte) 0);
+        team.setPlayers(new String[] {player.getName()});
+        for(UUID p : connectedPlayers) {
+            //ProxyServer.getInstance().getPlayer(p).unsafe().sendPacket(team);
+        }
+        //ProxyServer.getInstance().getScheduler().schedule(this, () -> addPacketAvailable(player.getUniqueId()), 1, TimeUnit.SECONDS);
+        //addPacketAvailable(player.getUniqueId());
     }
 
     @EventHandler
