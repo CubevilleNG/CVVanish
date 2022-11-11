@@ -7,28 +7,24 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 
-import net.md_5.bungee.BungeeCord;
-import net.md_5.bungee.ServerConnector;
 import net.md_5.bungee.UserConnection;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.PlayerDisconnectEvent;
 import net.md_5.bungee.api.event.PostLoginEvent;
-import net.md_5.bungee.api.event.PreLoginEvent;
-import net.md_5.bungee.api.event.ServerConnectedEvent;
+import net.md_5.bungee.api.event.ServerSwitchEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
-import net.md_5.bungee.api.score.Scoreboard;
+import net.md_5.bungee.api.score.Team;
 import net.md_5.bungee.chat.ComponentSerializer;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.YamlConfiguration;
 import net.md_5.bungee.event.EventHandler;
 
-import net.md_5.bungee.protocol.DefinedPacket;
-import net.md_5.bungee.protocol.packet.*;
+import net.md_5.bungee.protocol.packet.Chat;
 import org.cubeville.cvipc.CVIPC;
 import org.cubeville.cvipc.IPCInterface;
 
@@ -85,71 +81,61 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         actionBarNotifier.start();
 
         instance = this;
-        /*this.scoreboard = new Scoreboard();
-        net.md_5.bungee.api.score.Team team = new net.md_5.bungee.api.score.Team("citizen");
-        team.setNameTagVisibility("always");
-        team.setCollisionRule("always");
-        team.setFriendlyFire((byte) 0);
-        team.setColor(1);
-        team.setPrefix("test");
-        team.setSuffix("test");
-        scoreboard.addTeam(team);*/
         teams = new HashMap<>();
-        Team saTeam = new Team();
-        saTeam.setName("{\"text\":\"sa\"}");
-        saTeam.setDisplayName("{\"text\":\"sa\"}");
-        saTeam.setNameTagVisibility("{\"text\":\"always\"}");
-        saTeam.setCollisionRule("{\"text\":\"always\"}");
+        Team saTeam = new net.md_5.bungee.api.score.Team("5sa");
+        saTeam.setDisplayName("sa");
+        saTeam.setNameTagVisibility("always");
+        saTeam.setCollisionRule("always");
         saTeam.setFriendlyFire((byte) 0);
         saTeam.setColor(4);
-        saTeam.setPrefix("{\"text\":\"test\"}");
-        saTeam.setSuffix("{\"text\":\"test\"}");
-        saTeam.setMode((byte) 0);
+        saTeam.setPrefix("[SA] ");
+        saTeam.setSuffix("");
         this.teams.put("sa", saTeam);
-        Team aTeam = new Team();
-        aTeam.setName("{\"text\":\"a\"}");
-        aTeam.setDisplayName("{\"text\":\"a\"}");
-        aTeam.setNameTagVisibility("{\"text\":\"always\"}");
-        aTeam.setCollisionRule("{\"text\":\"always\"}");
+        Team aTeam = new Team("4a");
+        aTeam.setDisplayName("a");
+        aTeam.setNameTagVisibility("always");
+        aTeam.setCollisionRule("always");
         aTeam.setFriendlyFire((byte) 0);
-        aTeam.setColor(4);
-        aTeam.setPrefix("{\"text\":\"test\"}");
-        aTeam.setSuffix("{\"text\":\"test\"}");
-        aTeam.setMode((byte) 0);
+        aTeam.setColor(11);
+        aTeam.setPrefix("[A] ");
+        aTeam.setSuffix("");
         this.teams.put("a", aTeam);
-        Team smTeam = new Team();
-        smTeam.setName("{\"text\":\"sm\"}");
-        smTeam.setDisplayName("{\"text\":\"sm\"}");
-        smTeam.setNameTagVisibility("{\"text\":\"always\"}");
-        smTeam.setCollisionRule("{\"text\":\"always\"}");
+        Team smTeam = new Team("2sm");
+        smTeam.setDisplayName("sm");
+        smTeam.setNameTagVisibility("always");
+        smTeam.setCollisionRule("always");
         smTeam.setFriendlyFire((byte) 0);
-        smTeam.setColor(4);
-        smTeam.setPrefix("{\"text\":\"test\"}");
-        smTeam.setSuffix("{\"text\":\"test\"}");
-        smTeam.setMode((byte) 0);
+        smTeam.setColor(13);
+        smTeam.setPrefix("[SM] ");
+        smTeam.setSuffix("");
         this.teams.put("sm", smTeam);
-        Team mTeam = new Team();
-        mTeam.setName("{\"text\":\"m\"}");
-        mTeam.setDisplayName("{\"text\":\"m\"}");
-        mTeam.setNameTagVisibility("{\"text\":\"always\"}");
-        mTeam.setCollisionRule("{\"text\":\"always\"}");
+        Team mTeam = new Team("1m");
+        mTeam.setDisplayName("m");
+        mTeam.setNameTagVisibility("always");
+        mTeam.setCollisionRule("always");
         mTeam.setFriendlyFire((byte) 0);
-        mTeam.setColor(4);
-        mTeam.setPrefix("{\"text\":\"test\"}");
-        mTeam.setSuffix("{\"text\":\"test\"}");
-        mTeam.setMode((byte) 0);
+        mTeam.setColor(10);
+        mTeam.setPrefix("[M] ");
+        mTeam.setSuffix("");
         this.teams.put("m", mTeam);
-        Team rTeam = new Team();
-        rTeam.setName("{\"text\":\"r\"}");
-        rTeam.setDisplayName("{\"text\":\"r\"}");
-        rTeam.setNameTagVisibility("{\"text\":\"always\"}");
-        rTeam.setCollisionRule("{\"text\":\"always\"}");
+        Team rTeam = new Team("1r");
+        rTeam.setDisplayName("r");
+        rTeam.setNameTagVisibility("always");
+        rTeam.setCollisionRule("always");
         rTeam.setFriendlyFire((byte) 0);
-        rTeam.setColor(4);
-        rTeam.setPrefix("{\"text\":\"test\"}");
-        rTeam.setSuffix("{\"text\":\"test\"}");
-        rTeam.setMode((byte) 0);
+        rTeam.setColor(7);
+        rTeam.setPrefix("[R] ");
+        rTeam.setSuffix("");
         this.teams.put("r", rTeam);
+        Team cTeam = new Team("0c");
+        cTeam.setDisplayName("c");
+        cTeam.setNameTagVisibility("always");
+        cTeam.setCollisionRule("always");
+        cTeam.setFriendlyFire((byte) 0);
+        cTeam.setColor(15);
+        cTeam.setPrefix("[C] ");
+        cTeam.setSuffix("");
+        this.teams.put("c", cTeam);
     }
 
     public String getPlayerVisibleName(UUID uuid) {
@@ -200,57 +186,66 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
                 CVTabList.getInstanceFor(event.getPlayer().getUniqueId()).showPlayer(connectedPlayer);
             }
         }
-        ProxyServer.getInstance().getScheduler().schedule(this, () -> joinTeam(player), 10, TimeUnit.SECONDS);
-        //joinTeam(player);
-        //this.scoreboard.getTeam("citizen").addPlayer(player.getName());
+        ProxyServer.getInstance().getScheduler().schedule(this, () -> updateTeams(player.getUniqueId()), 1, TimeUnit.SECONDS);
     }
 
-    public void joinTeam(ProxiedPlayer player) {
-        /*Team team = new Team();
-        team.setName("{\"text\":\"" + player.getName() + "\"}");
-        team.setDisplayName("{\"text\":\"" + player.getName() + "\"}");
-        team.setNameTagVisibility("{\"text\":\"always\"}");
-        team.setCollisionRule("{\"text\":\"always\"}");
-        team.setFriendlyFire((byte) 0);
-        team.setColor(4);
-        team.setPrefix("{\"text\":\"test\"}");
-        team.setSuffix("{\"text\":\"test\"}");
-        team.setMode((byte) 2);
-        team.setPlayers();*/
-
-        //teams.put(player.getUniqueId(), team);
-        /*PlayerListHeaderFooter hF = new PlayerListHeaderFooter();
-        hF.setFooter("{\"text\":\"This is a Footer\"}");
-        hF.setHeader("{\"text\":\"This is a Header\"}");*/
-
-        /*for(UUID p : connectedPlayers) {
-            this.team.setMode((byte) 2);
-            this.team.setPlayers(new String[] {"{\"text\":\"" + player.getName() + "\"}"});
-            ProxyServer.getInstance().getPlayer(p).unsafe().sendPacket(team);
-            //ProxyServer.getInstance().getPlayer(p).unsafe().sendPacket(hF);
-            //CVTabList.getInstanceFor(p).sendTeam(team, ProxyServer.getInstance().getPlayer(p));
-        }*/
-        //ProxyServer.getInstance().getScheduler().schedule(this, () -> addPacketAvailable(player.getUniqueId()), 1, TimeUnit.SECONDS);
-        //addPacketAvailable(player.getUniqueId());
-
-        if(player.hasPermission("cvvanish.prefix.sa")) {
-            Team team = this.teams.get("sa");
-            //team.setPlayers(new String[] {"{\"text\":\"" + player.getName() + "\"}"});
-            team.setPlayers(new String[] {"[\"" + player.getName() + "\"]"});
-            this.teams.put("sa", team);
+    public void updateTeams(UUID updatedPlayerUUID) {
+        ProxiedPlayer updatedPlayer = ProxyServer.getInstance().getPlayer(updatedPlayerUUID);
+        if(updatedPlayer.isConnected()) {
+            if(updatedPlayer.hasPermission("cvvanish.prefix.sa")) {
+                if(!this.teams.get("sa").getPlayers().contains(updatedPlayer.getName())) this.teams.get("sa").addPlayer(updatedPlayer.getName());
+            } else if(updatedPlayer.hasPermission("cvvanish.prefix.a")) {
+                if(!this.teams.get("a").getPlayers().contains(updatedPlayer.getName())) this.teams.get("a").addPlayer(updatedPlayer.getName());
+            } else if(updatedPlayer.hasPermission("cvvanish.prefix.smod")) {
+                if(!this.teams.get("sm").getPlayers().contains(updatedPlayer.getName())) this.teams.get("sm").addPlayer(updatedPlayer.getName());
+            } else if(updatedPlayer.hasPermission("cvvanish.prefix.mod")) {
+                if(!this.teams.get("m").getPlayers().contains(updatedPlayer.getName())) this.teams.get("m").addPlayer(updatedPlayer.getName());
+            } else if(updatedPlayer.hasPermission("cvvanish.prefix.retired")) {
+                if(!this.teams.get("r").getPlayers().contains(updatedPlayer.getName())) this.teams.get("r").addPlayer(updatedPlayer.getName());
+            } else {
+                if(!this.teams.get("c").getPlayers().contains(updatedPlayer.getName())) this.teams.get("c").addPlayer(updatedPlayer.getName());
+            }
+        } else {
+            for(String teamName : this.teams.keySet()) {
+                this.teams.get(teamName).removePlayer(updatedPlayer.getName());
+            }
         }
-
-        player.unsafe().sendPacket(this.teams.get("sa"));
-        //ProxyServer.getInstance().getScheduler().schedule(this, () ->  player.unsafe().sendPacket(this.teams.get("a")), 1, TimeUnit.SECONDS);
-
-        /*for(String sTeam : this.teams.keySet()) {
-            Team team = this.teams.get(sTeam);
-            //player.unsafe().sendPacket(team);
-        }*/
+        for(UUID uuid : connectedPlayers) {
+            ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
+            for(String s : this.teams.keySet()) {
+                Team realTeam = this.teams.get(s);
+                net.md_5.bungee.protocol.packet.Team team = new net.md_5.bungee.protocol.packet.Team();
+                team.setName(ComponentSerializer.toString(TextComponent.fromLegacyText(realTeam.getName())));
+                team.setDisplayName(ComponentSerializer.toString(TextComponent.fromLegacyText(realTeam.getDisplayName())));
+                team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(realTeam.getPrefix())));
+                team.setSuffix(ComponentSerializer.toString(TextComponent.fromLegacyText(realTeam.getSuffix())));
+                team.setCollisionRule(ComponentSerializer.toString(TextComponent.fromLegacyText(realTeam.getCollisionRule())));
+                team.setFriendlyFire(realTeam.getFriendlyFire());
+                team.setNameTagVisibility(ComponentSerializer.toString(TextComponent.fromLegacyText(realTeam.getNameTagVisibility())));
+                team.setColor(realTeam.getColor());
+                Collection<String> newPlayerList = new ArrayList<>();
+                for(String oldPlayer : realTeam.getPlayers()) {
+                    UUID oldPlayerUUID = ProxyServer.getInstance().getPlayer(oldPlayer).getUniqueId();
+                    if(!isPlayerListed(oldPlayerUUID) && p.hasPermission("cvvanish.override")) {
+                        newPlayerList.add(oldPlayer); //todo do strike
+                        //team.setColor(18);
+                    } else if(isPlayerListed(oldPlayerUUID) && isPlayerInvisible(oldPlayerUUID) && p.hasPermission("cvvanish.override")) {
+                        newPlayerList.add(oldPlayer); //todo do italic
+                        //team.setColor(20);
+                    } else if(isPlayerListed(oldPlayerUUID)) {
+                        newPlayerList.add(oldPlayer);
+                    }
+                }
+                team.setPlayers(newPlayerList.toArray(new String[0]));
+                team.setMode((byte) 0);
+                p.unsafe().sendPacket(team);
+            }
+        }
     }
 
-    public Team getTeam(UUID uuid) {
-        return teams.get(uuid);
+    @EventHandler
+    public void onServerSwitch(ServerSwitchEvent event) {
+        updateTeams(event.getPlayer().getUniqueId());
     }
 
     @EventHandler
@@ -274,6 +269,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         nightvisionEnabledPlayers.remove(uuid);
         pickupDisabledPlayers.remove(uuid);
         interactDisabledPlayers.remove(uuid);
+        updateTeams(uuid);
     }
 
     public void updatePlayer(UUID uuid) {
@@ -335,6 +331,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         if(hasPermission(uuid, "cvvanish.disable.autointeractdisable") == false)
             setPlayerInteractDisabledStatus(uuid, false);
         setPlayerNightvisionEnabledStatus(uuid, false);
+        updateTeams(uuid);
     }
 
     public void setPlayerInvisible(UUID uuid) { 
@@ -359,6 +356,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         }
         setPlayerUnlistedStatus(uuid, true);
         setPlayerInvisibilityStatus(uuid, true);
+        updateTeams(uuid);
     }
 
     public void switchPlayerVisibility(UUID uuid) {

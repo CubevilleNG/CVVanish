@@ -11,10 +11,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.ConcurrentHashMap;
 
-import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.protocol.packet.PlayerListItem;
-import net.md_5.bungee.protocol.packet.Team;
 import net.md_5.bungee.tab.TabList;
 
 public class CVTabList extends TabList
@@ -123,8 +121,9 @@ public class CVTabList extends TabList
                                 }
                                 //String name = plugin.getPrefix(item.getUuid()) + plugin.getPlayerVisibleName(item.getUuid());
                                 name = plugin.getPrefix(item.getUuid()) + name;
-                                if(name.length() > 16) name = name.substring(0, 16);
-                                item.setUsername(name);*/
+                                if(name.length() > 16) name = name.substring(0, 16);*/
+                                //item.setUsername(item.getDisplayName());
+                                //System.out.println(item.);
                                 
                                 playerAddPackets.put(item.getUuid(), item);
 
