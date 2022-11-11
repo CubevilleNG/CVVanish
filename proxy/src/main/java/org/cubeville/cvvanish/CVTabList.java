@@ -158,7 +158,6 @@ public class CVTabList extends TabList
             playerListItem.setItems(items);
             player.unsafe().sendPacket(playerListItem);
         }
-        player.unsafe().sendPacket(plugin.getTeam(player.getUniqueId()));
     }
 
     @Override

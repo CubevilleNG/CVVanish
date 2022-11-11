@@ -57,7 +57,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
 
     private PlayerDataManager playerDataManager;
 
-    public HashMap<UUID, Team> teams;
+    public HashMap<String, Team> teams;
     
     @Override
     public void onEnable() {
@@ -95,6 +95,61 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         team.setSuffix("test");
         scoreboard.addTeam(team);*/
         teams = new HashMap<>();
+        Team saTeam = new Team();
+        saTeam.setName("{\"text\":\"sa\"}");
+        saTeam.setDisplayName("{\"text\":\"sa\"}");
+        saTeam.setNameTagVisibility("{\"text\":\"always\"}");
+        saTeam.setCollisionRule("{\"text\":\"always\"}");
+        saTeam.setFriendlyFire((byte) 0);
+        saTeam.setColor(4);
+        saTeam.setPrefix("{\"text\":\"test\"}");
+        saTeam.setSuffix("{\"text\":\"test\"}");
+        saTeam.setMode((byte) 0);
+        this.teams.put("sa", saTeam);
+        Team aTeam = new Team();
+        aTeam.setName("{\"text\":\"a\"}");
+        aTeam.setDisplayName("{\"text\":\"a\"}");
+        aTeam.setNameTagVisibility("{\"text\":\"always\"}");
+        aTeam.setCollisionRule("{\"text\":\"always\"}");
+        aTeam.setFriendlyFire((byte) 0);
+        aTeam.setColor(4);
+        aTeam.setPrefix("{\"text\":\"test\"}");
+        aTeam.setSuffix("{\"text\":\"test\"}");
+        aTeam.setMode((byte) 0);
+        this.teams.put("a", aTeam);
+        Team smTeam = new Team();
+        smTeam.setName("{\"text\":\"sm\"}");
+        smTeam.setDisplayName("{\"text\":\"sm\"}");
+        smTeam.setNameTagVisibility("{\"text\":\"always\"}");
+        smTeam.setCollisionRule("{\"text\":\"always\"}");
+        smTeam.setFriendlyFire((byte) 0);
+        smTeam.setColor(4);
+        smTeam.setPrefix("{\"text\":\"test\"}");
+        smTeam.setSuffix("{\"text\":\"test\"}");
+        smTeam.setMode((byte) 0);
+        this.teams.put("sm", smTeam);
+        Team mTeam = new Team();
+        mTeam.setName("{\"text\":\"m\"}");
+        mTeam.setDisplayName("{\"text\":\"m\"}");
+        mTeam.setNameTagVisibility("{\"text\":\"always\"}");
+        mTeam.setCollisionRule("{\"text\":\"always\"}");
+        mTeam.setFriendlyFire((byte) 0);
+        mTeam.setColor(4);
+        mTeam.setPrefix("{\"text\":\"test\"}");
+        mTeam.setSuffix("{\"text\":\"test\"}");
+        mTeam.setMode((byte) 0);
+        this.teams.put("m", mTeam);
+        Team rTeam = new Team();
+        rTeam.setName("{\"text\":\"r\"}");
+        rTeam.setDisplayName("{\"text\":\"r\"}");
+        rTeam.setNameTagVisibility("{\"text\":\"always\"}");
+        rTeam.setCollisionRule("{\"text\":\"always\"}");
+        rTeam.setFriendlyFire((byte) 0);
+        rTeam.setColor(4);
+        rTeam.setPrefix("{\"text\":\"test\"}");
+        rTeam.setSuffix("{\"text\":\"test\"}");
+        rTeam.setMode((byte) 0);
+        this.teams.put("r", rTeam);
     }
 
     public String getPlayerVisibleName(UUID uuid) {
@@ -145,13 +200,13 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
                 CVTabList.getInstanceFor(event.getPlayer().getUniqueId()).showPlayer(connectedPlayer);
             }
         }
-        //ProxyServer.getInstance().getScheduler().schedule(this, () -> initTeam(player), 10, TimeUnit.SECONDS);
-        initTeam(player);
+        ProxyServer.getInstance().getScheduler().schedule(this, () -> joinTeam(player), 10, TimeUnit.SECONDS);
+        //joinTeam(player);
         //this.scoreboard.getTeam("citizen").addPlayer(player.getName());
     }
 
-    public void initTeam(ProxiedPlayer player) {
-        Team team = new Team();
+    public void joinTeam(ProxiedPlayer player) {
+        /*Team team = new Team();
         team.setName("{\"text\":\"" + player.getName() + "\"}");
         team.setDisplayName("{\"text\":\"" + player.getName() + "\"}");
         team.setNameTagVisibility("{\"text\":\"always\"}");
@@ -160,17 +215,38 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         team.setColor(4);
         team.setPrefix("{\"text\":\"test\"}");
         team.setSuffix("{\"text\":\"test\"}");
-        team.setMode((byte) 0);
-        team.setPlayers(new String[] {"{\"text\":\"" + player.getName() + "\"}"});
+        team.setMode((byte) 2);
+        team.setPlayers();*/
 
-        teams.put(player.getUniqueId(), team);
+        //teams.put(player.getUniqueId(), team);
+        /*PlayerListHeaderFooter hF = new PlayerListHeaderFooter();
+        hF.setFooter("{\"text\":\"This is a Footer\"}");
+        hF.setHeader("{\"text\":\"This is a Header\"}");*/
 
         /*for(UUID p : connectedPlayers) {
+            this.team.setMode((byte) 2);
+            this.team.setPlayers(new String[] {"{\"text\":\"" + player.getName() + "\"}"});
             ProxyServer.getInstance().getPlayer(p).unsafe().sendPacket(team);
+            //ProxyServer.getInstance().getPlayer(p).unsafe().sendPacket(hF);
             //CVTabList.getInstanceFor(p).sendTeam(team, ProxyServer.getInstance().getPlayer(p));
         }*/
         //ProxyServer.getInstance().getScheduler().schedule(this, () -> addPacketAvailable(player.getUniqueId()), 1, TimeUnit.SECONDS);
         //addPacketAvailable(player.getUniqueId());
+
+        if(player.hasPermission("cvvanish.prefix.sa")) {
+            Team team = this.teams.get("sa");
+            //team.setPlayers(new String[] {"{\"text\":\"" + player.getName() + "\"}"});
+            team.setPlayers(new String[] {"[\"" + player.getName() + "\"]"});
+            this.teams.put("sa", team);
+        }
+
+        player.unsafe().sendPacket(this.teams.get("sa"));
+        //ProxyServer.getInstance().getScheduler().schedule(this, () ->  player.unsafe().sendPacket(this.teams.get("a")), 1, TimeUnit.SECONDS);
+
+        /*for(String sTeam : this.teams.keySet()) {
+            Team team = this.teams.get(sTeam);
+            //player.unsafe().sendPacket(team);
+        }*/
     }
 
     public Team getTeam(UUID uuid) {
