@@ -11,7 +11,9 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.ConcurrentHashMap;
 
+import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
+import net.md_5.bungee.chat.ComponentSerializer;
 import net.md_5.bungee.protocol.packet.PlayerListItem;
 import net.md_5.bungee.tab.TabList;
 
@@ -118,11 +120,14 @@ public class CVTabList extends TabList
                                     name = "§m" + name;
                                 } else if(plugin.isPlayerInvisible(item.getUuid())) {
                                     name = "§o" + name;
-                                }
+                                }*/
                                 //String name = plugin.getPrefix(item.getUuid()) + plugin.getPlayerVisibleName(item.getUuid());
-                                name = plugin.getPrefix(item.getUuid()) + name;
-                                if(name.length() > 16) name = name.substring(0, 16);*/
+                                //String name = "§4§m" + plugin.getPlayerVisibleName(item.getUuid());
+                                //name = "§m" + name;
+                                //name = plugin.getPrefix(item.getUuid()) + name;
+                                //if(name.length() > 16) name = name.substring(0, 16);
                                 //item.setUsername(item.getDisplayName());
+                                //item.setDisplayName(ComponentSerializer.toString(TextComponent.fromLegacyText(name)));
                                 //System.out.println(item.);
                                 
                                 playerAddPackets.put(item.getUuid(), item);
