@@ -180,15 +180,17 @@ public class TeamHandler {
             team.setColor(realTeam.getColor());
             Collection<String> newPlayerList = new ArrayList<>();
             for(String oldPlayer : realTeam.getPlayers()) {
-                UUID oldPlayerUUID = ProxyServer.getInstance().getPlayer(oldPlayer).getUniqueId();
-                if(!plugin.isPlayerListed(oldPlayerUUID) && p.hasPermission("cvvanish.override")) {
-                    newPlayerList.add(oldPlayer); //todo do strike
-                    //team.setColor(18);
-                } else if(plugin.isPlayerListed(oldPlayerUUID) && plugin.isPlayerInvisible(oldPlayerUUID) && p.hasPermission("cvvanish.override")) {
-                    newPlayerList.add(oldPlayer); //todo do italic
-                    //team.setColor(20);
-                } else if(plugin.isPlayerListed(oldPlayerUUID)) {
-                    newPlayerList.add(oldPlayer);
+                if(ProxyServer.getInstance().getPlayer(oldPlayer) != null) {
+                    UUID oldPlayerUUID = ProxyServer.getInstance().getPlayer(oldPlayer).getUniqueId();
+                    if(!plugin.isPlayerListed(oldPlayerUUID) && p.hasPermission("cvvanish.override")) {
+                        newPlayerList.add(oldPlayer); //todo do strike
+                        //team.setColor(18);
+                    } else if(plugin.isPlayerListed(oldPlayerUUID) && plugin.isPlayerInvisible(oldPlayerUUID) && p.hasPermission("cvvanish.override")) {
+                        newPlayerList.add(oldPlayer); //todo do italic
+                        //team.setColor(20);
+                    } else if(plugin.isPlayerListed(oldPlayerUUID)) {
+                        newPlayerList.add(oldPlayer);
+                    }
                 }
             }
             team.setPlayers(newPlayerList.toArray(new String[0]));
@@ -211,15 +213,17 @@ public class TeamHandler {
         team.setColor(realTeam.getColor());
         Collection<String> newPlayerList = new ArrayList<>();
         for(String oldPlayer : realTeam.getPlayers()) {
-            UUID oldPlayerUUID = ProxyServer.getInstance().getPlayer(oldPlayer).getUniqueId();
-            if(!plugin.isPlayerListed(oldPlayerUUID) && p.hasPermission("cvvanish.override")) {
-                newPlayerList.add(oldPlayer); //todo do strike
-                //team.setColor(18);
-            } else if(plugin.isPlayerListed(oldPlayerUUID) && plugin.isPlayerInvisible(oldPlayerUUID) && p.hasPermission("cvvanish.override")) {
-                newPlayerList.add(oldPlayer); //todo do italic
-                //team.setColor(20);
-            } else if(plugin.isPlayerListed(oldPlayerUUID)) {
-                newPlayerList.add(oldPlayer);
+            if(ProxyServer.getInstance().getPlayer(oldPlayer) != null) {
+                UUID oldPlayerUUID = ProxyServer.getInstance().getPlayer(oldPlayer).getUniqueId();
+                if(!plugin.isPlayerListed(oldPlayerUUID) && p.hasPermission("cvvanish.override")) {
+                    newPlayerList.add(oldPlayer); //todo do strike
+                    //team.setColor(18);
+                } else if(plugin.isPlayerListed(oldPlayerUUID) && plugin.isPlayerInvisible(oldPlayerUUID) && p.hasPermission("cvvanish.override")) {
+                    newPlayerList.add(oldPlayer); //todo do italic
+                    //team.setColor(20);
+                } else if(plugin.isPlayerListed(oldPlayerUUID)) {
+                    newPlayerList.add(oldPlayer);
+                }
             }
         }
         team.setPlayers(newPlayerList.toArray(new String[0]));
