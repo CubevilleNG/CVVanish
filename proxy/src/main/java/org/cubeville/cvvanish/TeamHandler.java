@@ -166,7 +166,7 @@ public class TeamHandler {
     }
 
     public void sendCreatePackets(ProxiedPlayer p) {
-        System.out.println("sending create packets to " + p.getName());
+        System.out.println("sending create team packets to " + p.getName());
         for(String t : this.teams.keySet()) {
             Team realTeam = this.teams.get(t);
             net.md_5.bungee.protocol.packet.Team team = new net.md_5.bungee.protocol.packet.Team();
@@ -200,7 +200,7 @@ public class TeamHandler {
     }
 
     public void sendPlayerUpdatePacket(String t, ProxiedPlayer p) {
-        System.out.println("sending update packet for team " + t + " to " + p.getName());
+        System.out.println("sending update team packet for team " + t + " to " + p.getName());
         Team realTeam = this.teams.get(t);
         net.md_5.bungee.protocol.packet.Team team = new net.md_5.bungee.protocol.packet.Team();
         team.setName(realTeam.getName());
