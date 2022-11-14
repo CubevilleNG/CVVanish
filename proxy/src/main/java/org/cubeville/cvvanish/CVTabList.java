@@ -1,16 +1,11 @@
 package org.cubeville.cvvanish;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.ConcurrentHashMap;
 
+import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.chat.ComponentSerializer;
@@ -49,7 +44,7 @@ public class CVTabList extends TabList
                 playerAddPacketsLock.unlock();
                 lck = false;
 
-                plugin.sendUpdatedPacket(uuid);
+               // plugin.sendUpdatedPacket(uuid);
             }
         }
         finally {
@@ -75,6 +70,12 @@ public class CVTabList extends TabList
     {
         super( player );
     }
+
+    /*private void sendPacketToAll(PlayerListItem.Item item) {
+        for(ProxiedPlayer p : ProxyServer.getInstance().getPlayers()) {
+            sendSingleItemPacket(PlayerListItem.Action.ADD_PLAYER, item);
+        }
+    }*/
 
     private void sendSingleItemPacket(PlayerListItem.Action action, PlayerListItem.Item item) {
         PlayerListItem playerListItem = new PlayerListItem();
@@ -106,14 +107,14 @@ public class CVTabList extends TabList
             }
             else { // Player
                 if(playerListItem.getAction() == PlayerListItem.Action.ADD_PLAYER) {
-                    if(plugin.isConnectedPlayer(item.getUuid())) {
+                    //if(plugin.isConnectedPlayer(item.getUuid())) {
                         playerAddPacketsLock.lock();
                         boolean lck = true;
                         try {
-                            if(!playerAddPackets.containsKey(item.getUuid())) {
+                            //if(!playerAddPackets.containsKey(item.getUuid())) {
                                 
-                                item.setGamemode(1);
-                                
+                                //item.setGamemode(1);
+
                                 //String name = plugin.getPrefix(item.getUuid()) + item.getUsername();  todo was already commented
                                 //String name = plugin.getPlayerVisibleName(item.getUuid());
                                 //if(plugin.isPlayerUnlisted(item.getUuid())) {
@@ -127,7 +128,8 @@ public class CVTabList extends TabList
                                 //name = "§m" + name;
                                 //name = plugin.getPrefix(item.getUuid()) + name;
                                 //if(name.length() > 16) name = name.substring(0, 16);
-                                //item.setUsername(item.getDisplayName());
+                                //item.setUsername("§T§P§₄");
+                                //item.setDisplayName("§T§P§₄");
                                 //item.setDisplayName(ComponentSerializer.toString(TextComponent.fromLegacyText(name)));
                                 //System.out.println(item.);
                                 
@@ -137,13 +139,14 @@ public class CVTabList extends TabList
                                 lck = false;
                                 
                                 plugin.addPacketAvailable(item.getUuid());
+                                //sendPacketToAll(item);
 
                                 //todo new
-                            }
+                            //}
                         }
                         finally {
                             if(lck) playerAddPacketsLock.unlock();
-                        }
+                        //}
                     }
                     //else { TODO: How to handle this if at all?
                     //    System.out.println("Ignoring add player packet cause plugin doesn't think it's a connected player.");

@@ -8,6 +8,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 
 import net.md_5.bungee.UserConnection;
+import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.config.ServerInfo;
@@ -272,10 +273,10 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
             for(UUID targetPlayer: connectedPlayers) {
                 if(targetPlayer.equals(uuid) == false &&
                    hasPermission(targetPlayer, "cvvanish.override") == false) {
-                    if(unlisted)
+                    /*if(unlisted)
                         CVTabList.getInstanceFor(targetPlayer).hidePlayer(uuid);
                     else
-                        CVTabList.getInstanceFor(targetPlayer).showPlayer(uuid);
+                        CVTabList.getInstanceFor(targetPlayer).showPlayer(uuid);*/
                 }
             }
         }

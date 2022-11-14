@@ -1,5 +1,6 @@
 package org.cubeville.cvvanish;
 
+import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.config.ServerInfo;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class TeamHandler {
 
@@ -37,8 +39,8 @@ public class TeamHandler {
         saTeam.setCollisionRule("always");
         saTeam.setFriendlyFire((byte) 0);
         saTeam.setColor(4);
-        saTeam.setPrefix("");
-        saTeam.setSuffix("");
+        saTeam.setPrefix("te");
+        saTeam.setSuffix("st");
         this.teams.put("sa", saTeam);
         Team aTeam = new Team("4a");
         aTeam.setDisplayName("a");
@@ -171,6 +173,7 @@ public class TeamHandler {
             Team realTeam = this.teams.get(t);
             net.md_5.bungee.protocol.packet.Team team = new net.md_5.bungee.protocol.packet.Team();
             team.setName(realTeam.getName());
+            //"{\"text\":\"a\"}"
             team.setDisplayName(ComponentSerializer.toString(TextComponent.fromLegacyText(realTeam.getDisplayName())));
             team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(realTeam.getPrefix())));
             team.setSuffix(ComponentSerializer.toString(TextComponent.fromLegacyText(realTeam.getSuffix())));
@@ -182,6 +185,7 @@ public class TeamHandler {
             for(String oldPlayer : realTeam.getPlayers()) {
                 if(ProxyServer.getInstance().getPlayer(oldPlayer) != null) {
                     UUID oldPlayerUUID = ProxyServer.getInstance().getPlayer(oldPlayer).getUniqueId();
+                    //oldPlayer = "§T§P§₄";
                     if(!plugin.isPlayerListed(oldPlayerUUID) && p.hasPermission("cvvanish.override")) {
                         newPlayerList.add(oldPlayer); //todo do strike
                         //team.setColor(18);
