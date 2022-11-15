@@ -92,6 +92,9 @@ public class TeamHandler {
     public void sendAllCreatePacketsToPlayer(ProxiedPlayer player) {
         for(Team team : teamManager.getAllTeams()) {
             net.md_5.bungee.protocol.packet.Team newTeam = getTeamPacket(team);
+            HashMap<String, String> serverConfig = this.serverTeamConfig.get(player.getServer().getInfo().getName());
+            newTeam.setCollisionRule(serverConfig.get("collision"));
+            newTeam.setNameTagVisibility(serverConfig.get("nametags"));
             newTeam.setMode((byte) 0);
             System.out.println(teamManager.getRealNameUUID((String) team.getPlayers().toArray()[0]));
             ProxiedPlayer p = ProxyServer.getInstance().getPlayer(teamManager.getRealNameUUID((String) team.getPlayers().toArray()[0]));
@@ -120,6 +123,9 @@ public class TeamHandler {
 
     public void sendCreatePacketToServer(net.md_5.bungee.protocol.packet.Team team, ProxiedPlayer player) {
         team.setMode((byte) 0);
+        HashMap<String, String> serverConfig = this.serverTeamConfig.get(player.getServer().getInfo().getName());
+        team.setCollisionRule(serverConfig.get("collision"));
+        team.setNameTagVisibility(serverConfig.get("nametags"));
         for(UUID uuid : plugin.getConnectedPlayers()) {
             ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
             if(!p.equals(player)) {
@@ -157,6 +163,9 @@ public class TeamHandler {
 
     public void sendVisiblePacketToServer(net.md_5.bungee.protocol.packet.Team team, ProxiedPlayer player) {
         team.setMode((byte) 1);
+        HashMap<String, String> serverConfig = this.serverTeamConfig.get(player.getServer().getInfo().getName());
+        team.setCollisionRule(serverConfig.get("collision"));
+        team.setNameTagVisibility(serverConfig.get("nametags"));
         for(UUID uuid : plugin.getConnectedPlayers()) {
             ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
             if(canSenderSeePlayerState(p.getUniqueId(), player.getUniqueId())) {
@@ -176,6 +185,9 @@ public class TeamHandler {
 
     public void sendInvisiblePacketToServer(net.md_5.bungee.protocol.packet.Team team, ProxiedPlayer player) {
         team.setMode((byte) 1);
+        HashMap<String, String> serverConfig = this.serverTeamConfig.get(player.getServer().getInfo().getName());
+        team.setCollisionRule(serverConfig.get("collision"));
+        team.setNameTagVisibility(serverConfig.get("nametags"));
         for(UUID uuid : plugin.getConnectedPlayers()) {
             ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
             p.unsafe().sendPacket(team);
@@ -198,6 +210,9 @@ public class TeamHandler {
 
     public void sendVanishPacketToServer(net.md_5.bungee.protocol.packet.Team team, ProxiedPlayer player) {
         team.setMode((byte) 1);
+        HashMap<String, String> serverConfig = this.serverTeamConfig.get(player.getServer().getInfo().getName());
+        team.setCollisionRule(serverConfig.get("collision"));
+        team.setNameTagVisibility(serverConfig.get("nametags"));
         for(UUID uuid : plugin.getConnectedPlayers()) {
             ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
             p.unsafe().sendPacket(team);
