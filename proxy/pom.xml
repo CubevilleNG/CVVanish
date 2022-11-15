@@ -12,19 +12,25 @@
     <dependency>
       <groupId>net.md-5</groupId>
       <artifactId>bungeecord-api</artifactId>
-      <version>1.18-R0.1-SNAPSHOT</version>
+      <version>1.19-R0.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>net.md-5</groupId>
       <artifactId>bungeecord-config</artifactId>
-      <version>1.18-R0.1-SNAPSHOT</version>
+      <version>1.19-R0.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>net.md-5</groupId>
       <artifactId>bungeecord-proxy</artifactId>
-      <version>1.18-R0.1-SNAPSHOT</version>
+      <version>1.19-R0.1-SNAPSHOT</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>net.md-5</groupId>
+      <artifactId>bungeecord-protocol</artifactId>
+      <version>1.19-R0.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -61,5 +67,10 @@
       </plugin>
     </plugins>
   </build>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+  </properties>
   
 </project>
