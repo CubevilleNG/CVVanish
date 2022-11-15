@@ -24,6 +24,7 @@ import org.cubeville.cvipc.CVIPC;
 import org.cubeville.cvipc.IPCInterface;
 
 import org.cubeville.cvchat.playerdata.PlayerDataManager;
+import org.cubeville.cvvanish.teams.TeamHandler;
 import org.cubeville.cvvanish.teams.TeamManager;
 
 public class CVVanish extends Plugin implements IPCInterface, Listener {
