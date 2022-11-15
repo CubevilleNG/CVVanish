@@ -1,19 +1,17 @@
 package org.cubeville.cvvanish;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.ConcurrentHashMap;
 
+import net.md_5.bungee.UserConnection;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
+import net.md_5.bungee.connection.LoginResult;
+import net.md_5.bungee.protocol.Property;
 import net.md_5.bungee.protocol.packet.PlayerListItem;
 import net.md_5.bungee.tab.TabList;
+import org.cubeville.cvvanish.teams.TeamManager;
 
 public class CVTabList extends TabList
 {
@@ -25,6 +23,11 @@ public class CVTabList extends TabList
     private static CVVanish plugin;
     public static void setPlugin(CVVanish plugins) {
         plugin = plugins;
+    }
+
+    private static TeamManager teamManager;
+    public static void setTeamManager(TeamManager teamManagers) {
+        teamManager = teamManagers;
     }
 
     private static ConcurrentHashMap<UUID, CVTabList> instances = new ConcurrentHashMap<>();
@@ -47,7 +50,7 @@ public class CVTabList extends TabList
                 playerAddPacketsLock.unlock();
                 lck = false;
 
-                plugin.sendUpdatedPacket(uuid);
+               plugin.sendUpdatedPacket(uuid);
             }
         }
         finally {
@@ -92,7 +95,7 @@ public class CVTabList extends TabList
     @Override
     public void onUpdate(PlayerListItem playerListItem)
     {
-        if(playerListItem.getAction() == PlayerListItem.Action.UPDATE_LATENCY) return; // TODO ... well, or not, kinda more convenient 
+        if(playerListItem.getAction() == PlayerListItem.Action.UPDATE_LATENCY) return; // TODO ... well, or not, kinda more convenient
         //         playerListItem.getAction() == PlayerListItem.Action.UPDATE_GAMEMODE) return;
 
         List<PlayerListItem.Item> updatedItemList = new ArrayList<>();
@@ -103,7 +106,7 @@ public class CVTabList extends TabList
                 updatedItemList.add(item);
             }
             else { // Player
-                if(playerListItem.getAction() == PlayerListItem.Action.ADD_PLAYER) {
+                if(playerListItem.getAction() == PlayerListItem.Action.ADD_PLAYER) { //PlayerListItem.Action.ADD_PLAYER
                     if(plugin.isConnectedPlayer(item.getUuid())) {
                         playerAddPacketsLock.lock();
                         boolean lck = true;
@@ -111,11 +114,13 @@ public class CVTabList extends TabList
                             if(!playerAddPackets.containsKey(item.getUuid())) {
                                 
                                 item.setGamemode(1);
-                                
-                                //String name = plugin.getPrefix(item.getUuid()) + item.getUsername();
-                                String name = plugin.getPrefix(item.getUuid()) + plugin.getPlayerVisibleName(item.getUuid());
-                                if(name.length() > 16) name = name.substring(0, 16);
-                                item.setUsername(name);
+
+                                String fakeName = teamManager.getFakeName(item.getUuid());
+                                if(fakeName == null) {
+                                    System.out.println("fake name was null! Cannot set username");
+                                } else {
+                                    item.setUsername(fakeName);
+                                }
                                 
                                 playerAddPackets.put(item.getUuid(), item);
 
@@ -147,6 +152,27 @@ public class CVTabList extends TabList
             playerListItem.setItems(items);
             player.unsafe().sendPacket(playerListItem);
         }
+    }
+
+    public void anotherPacket(ProxiedPlayer player) {
+        PlayerListItem pli = new PlayerListItem();
+        pli.setAction(PlayerListItem.Action.ADD_PLAYER);
+        PlayerListItem.Item item = new PlayerListItem.Item();
+        item.setPing(player.getPing());
+        item.setUsername(player.getName());
+        item.setGamemode(1);
+        item.setUuid(player.getUniqueId());
+        item.setProperties(new Property[0]);
+        LoginResult loginResult = ((UserConnection) player).
+                getPendingConnection().getLoginProfile();
+        if (loginResult != null) {
+            Property[] props = loginResult.getProperties();
+            item.setProperties(props);
+        } else {
+            item.setProperties(new Property[0]);
+        }
+        pli.setItems(new PlayerListItem.Item[]{item});
+        this.player.unsafe().sendPacket(pli);
     }
 
     @Override
