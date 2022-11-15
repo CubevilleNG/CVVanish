@@ -110,7 +110,7 @@ public class CVTabList extends TabList
             }
             else { // Player
                 if(playerListItem.getAction() == PlayerListItem.Action.ADD_PLAYER) { //PlayerListItem.Action.ADD_PLAYER
-                    //if(plugin.isConnectedPlayer(item.getUuid())) {
+                    if(plugin.isConnectedPlayer(item.getUuid())) {
                         playerAddPacketsLock.lock();
                         boolean lck = true;
                         try {
@@ -135,7 +135,7 @@ public class CVTabList extends TabList
                         }
                         finally {
                             if(lck) playerAddPacketsLock.unlock();
-                        //}
+                        }
                     }
                     //else { TODO: How to handle this if at all?
                     //    System.out.println("Ignoring add player packet cause plugin doesn't think it's a connected player.");

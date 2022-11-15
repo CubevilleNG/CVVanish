@@ -56,7 +56,7 @@ public class TeamHandler {
 
     public void init(ProxiedPlayer player) {
         String [] rank = getRank(player);
-        String currentTeam = teamManager.getFakeName(player.getUniqueId());
+        String currentTeam = teamManager.getPlayerTeam(player.getUniqueId()) == null ? null : teamManager.getPlayerTeam(player.getUniqueId()).getName();
         String newTeam = rank[0] + player.getName();
         Team team;
         Team destroyTeam;
@@ -68,6 +68,10 @@ public class TeamHandler {
             team = teamManager.addPlayerTeam(player.getUniqueId(), newTeam, rank[1]);
         } else {
             team = teamManager.getPlayerTeam(player.getUniqueId());
+        }
+        if(team == null) {
+            System.out.println("Creation or retrieval of Team failed! Cancelling packet send");
+            return;
         }
         sendAllCreatePacketsToPlayer(player);
         sendCreatePacketToServer(getTeamPacket(team), player);
@@ -94,7 +98,7 @@ public class TeamHandler {
                     player.unsafe().sendPacket(newTeam);
                 }
             } else {
-                p.unsafe().sendPacket(newTeam);
+                player.unsafe().sendPacket(newTeam);
             }
         }
     }
@@ -155,14 +159,17 @@ public class TeamHandler {
         team.setMode((byte) 1);
         for(UUID uuid : plugin.getConnectedPlayers()) {
             ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
+            p.unsafe().sendPacket(team);
+            String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(team.getPrefix()));
+            String color = oldPrefix.substring(0, oldPrefix.indexOf("§") + 2);
+            String oldPrefixName = oldPrefix.substring(oldPrefix.indexOf("§") + 2);
+            String newPrefix = color + "§o" + oldPrefixName;
+            team.setMode((byte) 0);
             if(player.equals(p) || p.hasPermission("cvvanish.override")) {
-                p.unsafe().sendPacket(team);
-                String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(team.getPrefix()));
-                String color = oldPrefix.substring(0, oldPrefix.indexOf("§") + 2);
-                String oldPrefixName = oldPrefix.substring(oldPrefix.indexOf("§") + 2);
-                String newPrefix = color + "§o" + oldPrefixName;
                 team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
-                team.setMode((byte) 0);
+                p.unsafe().sendPacket(team);
+            } else {
+                team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(color + oldPrefixName)));
                 p.unsafe().sendPacket(team);
             }
         }
@@ -210,7 +217,7 @@ public class TeamHandler {
         } else if(player.hasPermission("cvvanish.prefix.mod")) {
             return new String[]{"2","a"};
         } else if(player.hasPermission("cvvanish.prefix.retired")) {
-            return new String[]{"1","8"};
+            return new String[]{"1","7"};
         } else {
             return new String[]{"0","f"};
         }

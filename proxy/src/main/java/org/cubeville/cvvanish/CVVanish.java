@@ -271,10 +271,10 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
             for(UUID targetPlayer: connectedPlayers) {
                 if(targetPlayer.equals(uuid) == false &&
                    hasPermission(targetPlayer, "cvvanish.override") == false) {
-                    /*if(unlisted)
+                    if(unlisted)
                         CVTabList.getInstanceFor(targetPlayer).hidePlayer(uuid);
                     else
-                        CVTabList.getInstanceFor(targetPlayer).showPlayer(uuid);*/
+                        CVTabList.getInstanceFor(targetPlayer).showPlayer(uuid);
                 }
             }
         }
