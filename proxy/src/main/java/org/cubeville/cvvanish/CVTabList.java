@@ -14,6 +14,7 @@ import net.md_5.bungee.connection.LoginResult;
 import net.md_5.bungee.protocol.Property;
 import net.md_5.bungee.protocol.packet.PlayerListItem;
 import net.md_5.bungee.tab.TabList;
+import org.cubeville.cvvanish.teams.TeamManager;
 
 public class CVTabList extends TabList
 {
@@ -25,6 +26,11 @@ public class CVTabList extends TabList
     private static CVVanish plugin;
     public static void setPlugin(CVVanish plugins) {
         plugin = plugins;
+    }
+
+    private static TeamManager teamManager;
+    public static void setTeamManager(TeamManager teamManagers) {
+        teamManager = teamManagers;
     }
 
     private static ConcurrentHashMap<UUID, CVTabList> instances = new ConcurrentHashMap<>();
@@ -47,7 +53,7 @@ public class CVTabList extends TabList
                 playerAddPacketsLock.unlock();
                 lck = false;
 
-               // plugin.sendUpdatedPacket(uuid);
+               plugin.sendUpdatedPacket(uuid);
             }
         }
         finally {
@@ -73,12 +79,6 @@ public class CVTabList extends TabList
     {
         super( player );
     }
-
-    /*private void sendPacketToAll(PlayerListItem.Item item) {
-        for(ProxiedPlayer p : ProxyServer.getInstance().getPlayers()) {
-            sendSingleItemPacket(PlayerListItem.Action.ADD_PLAYER, item);
-        }
-    }*/
 
     private void sendSingleItemPacket(PlayerListItem.Action action, PlayerListItem.Item item) {
         PlayerListItem playerListItem = new PlayerListItem();
@@ -114,27 +114,16 @@ public class CVTabList extends TabList
                         playerAddPacketsLock.lock();
                         boolean lck = true;
                         try {
-                            //if(!playerAddPackets.containsKey(item.getUuid())) {
+                            if(!playerAddPackets.containsKey(item.getUuid())) {
                                 
-                                //item.setGamemode(1);
+                                item.setGamemode(1);
 
-                                //String name = plugin.getPrefix(item.getUuid()) + item.getUsername();  todo was already commented
-                                //String name = plugin.getPlayerVisibleName(item.getUuid());
-                                //if(plugin.isPlayerUnlisted(item.getUuid())) {
-                                    //name = "§m" + name;
-                                    //item.setGamemode(3);
-                                //} else if(plugin.isPlayerInvisible(item.getUuid())) {
-                                    //name = "§o" + name;
-                                //}
-                                //String name = plugin.getPrefix(item.getUuid()) + plugin.getPlayerVisibleName(item.getUuid());
-                                //String name = "§4§m" + plugin.getPlayerVisibleName(item.getUuid());
-                                //name = "§m" + name;
-                                //name = plugin.getPrefix(item.getUuid()) + name;
-                                //if(name.length() > 16) name = name.substring(0, 16);
-                                //item.setUsername("i");
-                                //item.setDisplayName("name"); //§T§P§₄
-                                //item.setDisplayName(ComponentSerializer.toString(TextComponent.fromLegacyText("name")));
-                                //System.out.println(item.);
+                                String fakeName = teamManager.getFakeName(item.getUuid());
+                                if(fakeName == null) {
+                                    System.out.println("fake name was null! Cannot set username");
+                                } else {
+                                    item.setUsername(fakeName);
+                                }
                                 
                                 playerAddPackets.put(item.getUuid(), item);
 
@@ -142,11 +131,7 @@ public class CVTabList extends TabList
                                 lck = false;
                                 
                                 plugin.addPacketAvailable(item.getUuid());
-                                //sendPacketToAll(item);
-                                //anotherPacket(player);
-
-                                //todo new
-                            //}
+                            }
                         }
                         finally {
                             if(lck) playerAddPacketsLock.unlock();

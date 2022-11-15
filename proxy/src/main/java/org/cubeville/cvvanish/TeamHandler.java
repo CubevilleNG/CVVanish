@@ -9,6 +9,7 @@ import net.md_5.bungee.chat.ComponentSerializer;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
+import org.cubeville.cvvanish.teams.TeamManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,72 +18,14 @@ import java.util.*;
 public class TeamHandler {
 
     public CVVanish plugin;
+    public TeamManager teamManager;
 
-    public HashMap<String, Team> teams;
     public HashMap<String, HashMap<String, String>> serverTeamConfig;
-    public HashMap<UUID, String> playerTeam;
 
-    public TeamHandler(CVVanish plugin) {
+    public TeamHandler(CVVanish plugin, TeamManager teamManager) {
         this.plugin = plugin;
-        this.teams = new HashMap<>();
+        this.teamManager = teamManager;
         this.serverTeamConfig = new HashMap<>();
-        this.playerTeam = new HashMap<>();
-
-        Team saTeam = new net.md_5.bungee.api.score.Team("5sa");
-        saTeam.setDisplayName("");
-        saTeam.setNameTagVisibility("always");
-        saTeam.setCollisionRule("always");
-        saTeam.setFriendlyFire((byte) 0);
-        saTeam.setColor(4);
-        saTeam.setPrefix("te");
-        saTeam.setSuffix("st");
-        this.teams.put("sa", saTeam);
-        Team aTeam = new Team("4a");
-        aTeam.setDisplayName("");
-        aTeam.setNameTagVisibility("always");
-        aTeam.setCollisionRule("always");
-        aTeam.setFriendlyFire((byte) 0);
-        aTeam.setColor(11);
-        aTeam.setPrefix("");
-        aTeam.setSuffix("");
-        this.teams.put("a", aTeam);
-        Team smTeam = new Team("2sm");
-        smTeam.setDisplayName("");
-        smTeam.setNameTagVisibility("always");
-        smTeam.setCollisionRule("always");
-        smTeam.setFriendlyFire((byte) 0);
-        smTeam.setColor(13);
-        smTeam.setPrefix("");
-        smTeam.setSuffix("");
-        this.teams.put("sm", smTeam);
-        Team mTeam = new Team("1m");
-        mTeam.setDisplayName("");
-        mTeam.setNameTagVisibility("always");
-        mTeam.setCollisionRule("always");
-        mTeam.setFriendlyFire((byte) 0);
-        mTeam.setColor(10);
-        mTeam.setPrefix("");
-        mTeam.setSuffix("");
-        this.teams.put("m", mTeam);
-        Team rTeam = new Team("1r");
-        rTeam.setDisplayName("");
-        rTeam.setNameTagVisibility("always");
-        rTeam.setCollisionRule("always");
-        rTeam.setFriendlyFire((byte) 0);
-        rTeam.setColor(7);
-        rTeam.setPrefix("");
-        rTeam.setSuffix("");
-        this.teams.put("r", rTeam);
-        Team cTeam = new Team("0c");
-        cTeam.setDisplayName("");
-        cTeam.setNameTagVisibility("always");
-        cTeam.setCollisionRule("always");
-        cTeam.setFriendlyFire((byte) 0);
-        cTeam.setColor(15);
-        cTeam.setPrefix("");
-        cTeam.setSuffix("");
-        this.teams.put("c", cTeam);
-
         updateServerTeamConfig();
     }
 
@@ -112,121 +55,164 @@ public class TeamHandler {
     }
 
     public void init(ProxiedPlayer player) {
-        String currentTeam = getCurrentTeam(player.getUniqueId());
-        String newTeam = getNewTeam(player);
+        String [] rank = getRank(player);
+        String currentTeam = teamManager.getFakeName(player.getUniqueId());
+        String newTeam = rank[0] + player.getName();
+        Team team;
+        Team destroyTeam;
         if(currentTeam == null) {     //proxy doesn't have the player in a team
-            addPlayerToTeam(newTeam, player);
+            team = teamManager.addPlayerTeam(player.getUniqueId(), newTeam, rank[1]);
         } else if(!currentTeam.equalsIgnoreCase(newTeam)) {     //proxy has the player in the wrong team (only use case is probably a promotion?)
-            removePlayerFromTeam(currentTeam, player);
-            addPlayerToTeam(newTeam, player);
+            destroyTeam = teamManager.removePlayerTeam(player.getUniqueId());
+            sendRemovePacketToServer(getTeamPacket(destroyTeam));
+            team = teamManager.addPlayerTeam(player.getUniqueId(), newTeam, rank[1]);
+        } else {
+            team = teamManager.getPlayerTeam(player.getUniqueId());
         }
-        sendCreatePackets(player);
-        updateServerWithPlayer(newTeam, player);
+        sendAllCreatePacketsToPlayer(player);
+        sendCreatePacketToServer(getTeamPacket(team), player);
     }
 
-    public void updateServerWithPlayer(String t, ProxiedPlayer player) {
+    public void sendAllCreatePacketsToPlayer(ProxiedPlayer player) {
+        for(Team team : teamManager.getAllTeams()) {
+            net.md_5.bungee.protocol.packet.Team newTeam = getTeamPacket(team);
+            newTeam.setMode((byte) 0);
+            ProxiedPlayer p = ProxyServer.getInstance().getPlayer(teamManager.getRealNameUUID((String) team.getPlayers().toArray()[0]));
+            String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(newTeam.getPrefix()));
+            String color = oldPrefix.substring(0, oldPrefix.indexOf("§") + 2);
+            String oldPrefixName = oldPrefix.substring(oldPrefix.indexOf("§") + 2);
+            if(plugin.isPlayerUnlisted(p.getUniqueId()) && player.hasPermission("cvvanish.override")) {
+                String newPrefix = color + "§m" + oldPrefixName;
+                newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
+                player.unsafe().sendPacket(newTeam);
+            } else if(plugin.isPlayerInvisible(p.getUniqueId())) {
+                if(player.hasPermission("cvvanish.override") || player.equals(p)) {
+                    String newPrefix = color + "§o" + oldPrefixName;
+                    newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
+                    player.unsafe().sendPacket(newTeam);
+                } else {
+                    player.unsafe().sendPacket(newTeam);
+                }
+            } else {
+                p.unsafe().sendPacket(newTeam);
+            }
+        }
+    }
+
+    public void sendCreatePacketToServer(net.md_5.bungee.protocol.packet.Team team, ProxiedPlayer player) {
+        team.setMode((byte) 0);
         for(UUID uuid : plugin.getConnectedPlayers()) {
             ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
             if(!p.equals(player)) {
-                sendPlayerUpdatePacket(t, p);
-            }
-        }
-    }
-
-    public String getCurrentTeam(UUID uuid) {
-        return this.playerTeam.get(uuid);
-    }
-
-    public String getNewTeam(ProxiedPlayer player) {
-        if(player.hasPermission("cvvanish.prefix.sa")) {
-            return "sa";
-        } else if(player.hasPermission("cvvanish.prefix.a")) {
-            return "a";
-        } else if(player.hasPermission("cvvanish.prefix.smod")) {
-            return "sm";
-        } else if(player.hasPermission("cvvanish.prefix.mod")) {
-            return "m";
-        } else if(player.hasPermission("cvvanish.prefix.retired")) {
-            return "r";
-        } else {
-            return "c";
-        }
-    }
-
-    public void addPlayerToTeam(String team, ProxiedPlayer player) {
-        this.teams.get(team).addPlayer(player.getName());
-        this.playerTeam.put(player.getUniqueId(), team);
-    }
-
-    public void removePlayerFromTeam(String team, ProxiedPlayer player) {
-        this.teams.get(team).removePlayer(player.getName());
-    }
-
-    public void sendCreatePackets(ProxiedPlayer p) {
-        System.out.println("sending create team packets to " + p.getName());
-        for(String t : this.teams.keySet()) {
-            Team realTeam = this.teams.get(t);
-            net.md_5.bungee.protocol.packet.Team team = new net.md_5.bungee.protocol.packet.Team();
-            team.setName(realTeam.getName());
-            //"{\"text\":\"a\"}"  ComponentSerializer.toString(TextComponent.fromLegacyText(realTeam.getDisplayName()))
-            team.setDisplayName(ComponentSerializer.toString(TextComponent.fromLegacyText(realTeam.getDisplayName())));
-            team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(realTeam.getPrefix())));
-            team.setSuffix(ComponentSerializer.toString(TextComponent.fromLegacyText(realTeam.getSuffix())));
-            team.setCollisionRule(this.serverTeamConfig.get(p.getServer().getInfo().getName().toLowerCase()).get("collision"));
-            team.setFriendlyFire(realTeam.getFriendlyFire());
-            team.setNameTagVisibility(this.serverTeamConfig.get(p.getServer().getInfo().getName().toLowerCase()).get("nametags"));
-            team.setColor(realTeam.getColor());
-            Collection<String> newPlayerList = new ArrayList<>();
-            for(String oldPlayer : realTeam.getPlayers()) {
-                if(ProxyServer.getInstance().getPlayer(oldPlayer) != null) {
-                    UUID oldPlayerUUID = ProxyServer.getInstance().getPlayer(oldPlayer).getUniqueId();
-                    //oldPlayer = "name"; //§T§P§₄
-                    if(!plugin.isPlayerListed(oldPlayerUUID) && p.hasPermission("cvvanish.override")) {
-                        newPlayerList.add(oldPlayer); //todo do strike
-                        //team.setColor(18);
-                    } else if(plugin.isPlayerListed(oldPlayerUUID) && plugin.isPlayerInvisible(oldPlayerUUID) && p.hasPermission("cvvanish.override")) {
-                        newPlayerList.add(oldPlayer); //todo do italic
-                        //team.setColor(20);
-                    } else if(plugin.isPlayerListed(oldPlayerUUID)) {
-                        newPlayerList.add(oldPlayer);
+                String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(team.getPrefix()));
+                String color = oldPrefix.substring(0, oldPrefix.indexOf("§") + 2);
+                String oldPrefixName = oldPrefix.substring(oldPrefix.indexOf("§") + 2);
+                if(plugin.isPlayerUnlisted(player.getUniqueId()) && p.hasPermission("cvvanish.override")) {
+                    String newPrefix = color + "§m" + oldPrefixName;
+                    team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
+                    p.unsafe().sendPacket(team);
+                } else if(plugin.isPlayerInvisible(player.getUniqueId())) {
+                    if(p.hasPermission("cvvanish.override")) {
+                        String newPrefix = color + "§o" + oldPrefixName;
+                        team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
+                        p.unsafe().sendPacket(team);
+                    } else {
+                        p.unsafe().sendPacket(team);
                     }
+                } else {
+                    p.unsafe().sendPacket(team);
                 }
             }
-            team.setPlayers(newPlayerList.toArray(new String[0]));
+        }
+    }
+
+    public void sendRemovePacketToServer(net.md_5.bungee.protocol.packet.Team team) {
+        team.setMode((byte) 1);
+        for(UUID uuid : plugin.getConnectedPlayers()) {
+            ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
+            p.unsafe().sendPacket(team);
+        }
+    }
+
+    public void sendVisiblePacketToServer(net.md_5.bungee.protocol.packet.Team team, ProxiedPlayer player) {
+        team.setMode((byte) 1);
+        for(UUID uuid : plugin.getConnectedPlayers()) {
+            ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
+            if(player.equals(p) || p.hasPermission("cvvanish.override")) {
+                p.unsafe().sendPacket(team);
+            }
+            String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(team.getPrefix()));
+            String color = oldPrefix.substring(0, oldPrefix.indexOf("§") + 2);
+            String oldPrefixName = oldPrefix.substring(oldPrefix.indexOf("§") + 2);
+            String newPrefix = color + oldPrefixName;
+            team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
             team.setMode((byte) 0);
             p.unsafe().sendPacket(team);
         }
     }
 
-    public void sendPlayerUpdatePacket(String t, ProxiedPlayer p) {
-        System.out.println("sending update team packet for team " + t + " to " + p.getName());
-        Team realTeam = this.teams.get(t);
-        net.md_5.bungee.protocol.packet.Team team = new net.md_5.bungee.protocol.packet.Team();
-        team.setName(realTeam.getName());
-        team.setDisplayName(ComponentSerializer.toString(TextComponent.fromLegacyText(realTeam.getDisplayName())));
-        team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(realTeam.getPrefix())));
-        team.setSuffix(ComponentSerializer.toString(TextComponent.fromLegacyText(realTeam.getSuffix())));
-        team.setCollisionRule(this.serverTeamConfig.get(p.getServer().getInfo().getName().toLowerCase()).get("collision"));
-        team.setFriendlyFire(realTeam.getFriendlyFire());
-        team.setNameTagVisibility(this.serverTeamConfig.get(p.getServer().getInfo().getName().toLowerCase()).get("nametags"));
-        team.setColor(realTeam.getColor());
-        Collection<String> newPlayerList = new ArrayList<>();
-        for(String oldPlayer : realTeam.getPlayers()) {
-            if(ProxyServer.getInstance().getPlayer(oldPlayer) != null) {
-                UUID oldPlayerUUID = ProxyServer.getInstance().getPlayer(oldPlayer).getUniqueId();
-                if(!plugin.isPlayerListed(oldPlayerUUID) && p.hasPermission("cvvanish.override")) {
-                    newPlayerList.add(oldPlayer); //todo do strike
-                    //team.setColor(18);
-                } else if(plugin.isPlayerListed(oldPlayerUUID) && plugin.isPlayerInvisible(oldPlayerUUID) && p.hasPermission("cvvanish.override")) {
-                    newPlayerList.add(oldPlayer); //todo do italic
-                    //team.setColor(20);
-                } else if(plugin.isPlayerListed(oldPlayerUUID)) {
-                    newPlayerList.add(oldPlayer);
-                }
+    public void sendInvisiblePacketToServer(net.md_5.bungee.protocol.packet.Team team, ProxiedPlayer player) {
+        team.setMode((byte) 1);
+        for(UUID uuid : plugin.getConnectedPlayers()) {
+            ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
+            if(player.equals(p) || p.hasPermission("cvvanish.override")) {
+                p.unsafe().sendPacket(team);
+                String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(team.getPrefix()));
+                String color = oldPrefix.substring(0, oldPrefix.indexOf("§") + 2);
+                String oldPrefixName = oldPrefix.substring(oldPrefix.indexOf("§") + 2);
+                String newPrefix = color + "§o" + oldPrefixName;
+                team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
+                team.setMode((byte) 0);
+                p.unsafe().sendPacket(team);
             }
         }
-        team.setPlayers(newPlayerList.toArray(new String[0]));
-        team.setMode((byte) 3);
-        p.unsafe().sendPacket(team);
+    }
+
+    public void sendVanishPacketToServer(net.md_5.bungee.protocol.packet.Team team, ProxiedPlayer player) {
+        team.setMode((byte) 1);
+        for(UUID uuid : plugin.getConnectedPlayers()) {
+            ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
+            p.unsafe().sendPacket(team);
+            if(player.equals(p) || p.hasPermission("cvvanish.override")) {
+                String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(team.getPrefix()));
+                String color = oldPrefix.substring(0, oldPrefix.indexOf("§") + 2);
+                String oldPrefixName = oldPrefix.substring(oldPrefix.indexOf("§") + 2);
+                String newPrefix = color + "§m" + oldPrefixName;
+                team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
+                team.setMode((byte) 0);
+                p.unsafe().sendPacket(team);
+            }
+        }
+    }
+
+    public net.md_5.bungee.protocol.packet.Team getTeamPacket(Team team) {
+        net.md_5.bungee.protocol.packet.Team newTeam = new net.md_5.bungee.protocol.packet.Team();
+        newTeam.setName(team.getName());
+        newTeam.setDisplayName(ComponentSerializer.toString(TextComponent.fromLegacyText(team.getDisplayName())));
+        newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(team.getPrefix())));
+        newTeam.setSuffix(ComponentSerializer.toString(TextComponent.fromLegacyText(team.getSuffix())));
+        newTeam.setCollisionRule(team.getCollisionRule());
+        newTeam.setFriendlyFire(team.getFriendlyFire());
+        newTeam.setNameTagVisibility(team.getNameTagVisibility());
+        newTeam.setColor(team.getColor());
+        Collection<String> teamPlayers = new ArrayList<>(team.getPlayers());
+        newTeam.setPlayers(teamPlayers.toArray(new String[0]));
+        return newTeam;
+    }
+
+    public String[] getRank(ProxiedPlayer player) {
+        if(player.hasPermission("cvvanish.prefix.sa")) {
+            return new String[]{"5","4"};
+        } else if(player.hasPermission("cvvanish.prefix.a")) {
+            return new String[]{"4","b"};
+        } else if(player.hasPermission("cvvanish.prefix.smod")) {
+            return new String[]{"3","d"};
+        } else if(player.hasPermission("cvvanish.prefix.mod")) {
+            return new String[]{"2","a"};
+        } else if(player.hasPermission("cvvanish.prefix.retired")) {
+            return new String[]{"1","8"};
+        } else {
+            return new String[]{"0","f"};
+        }
     }
 }

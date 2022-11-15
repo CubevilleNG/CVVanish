@@ -22,7 +22,7 @@ public class VReloadCommand extends Command {
         }
         teamHandler.updateServerTeamConfig();
         for(ProxiedPlayer p : ProxyServer.getInstance().getPlayers()) {
-            teamHandler.sendCreatePackets(p);
+            teamHandler.sendAllCreatePacketsToPlayer(p);
         }
         commandSender.sendMessage(ChatColor.GREEN + "Proxy Team Config Reloaded");
     }
