@@ -1,6 +1,5 @@
 package org.cubeville.cvvanish;
 
-import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.config.ServerInfo;
@@ -13,11 +12,7 @@ import net.md_5.bungee.config.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.*;
 
 public class TeamHandler {
 
@@ -34,7 +29,7 @@ public class TeamHandler {
         this.playerTeam = new HashMap<>();
 
         Team saTeam = new net.md_5.bungee.api.score.Team("5sa");
-        saTeam.setDisplayName("sa");
+        saTeam.setDisplayName("");
         saTeam.setNameTagVisibility("always");
         saTeam.setCollisionRule("always");
         saTeam.setFriendlyFire((byte) 0);
@@ -43,7 +38,7 @@ public class TeamHandler {
         saTeam.setSuffix("st");
         this.teams.put("sa", saTeam);
         Team aTeam = new Team("4a");
-        aTeam.setDisplayName("a");
+        aTeam.setDisplayName("");
         aTeam.setNameTagVisibility("always");
         aTeam.setCollisionRule("always");
         aTeam.setFriendlyFire((byte) 0);
@@ -52,7 +47,7 @@ public class TeamHandler {
         aTeam.setSuffix("");
         this.teams.put("a", aTeam);
         Team smTeam = new Team("2sm");
-        smTeam.setDisplayName("sm");
+        smTeam.setDisplayName("");
         smTeam.setNameTagVisibility("always");
         smTeam.setCollisionRule("always");
         smTeam.setFriendlyFire((byte) 0);
@@ -61,7 +56,7 @@ public class TeamHandler {
         smTeam.setSuffix("");
         this.teams.put("sm", smTeam);
         Team mTeam = new Team("1m");
-        mTeam.setDisplayName("m");
+        mTeam.setDisplayName("");
         mTeam.setNameTagVisibility("always");
         mTeam.setCollisionRule("always");
         mTeam.setFriendlyFire((byte) 0);
@@ -70,7 +65,7 @@ public class TeamHandler {
         mTeam.setSuffix("");
         this.teams.put("m", mTeam);
         Team rTeam = new Team("1r");
-        rTeam.setDisplayName("r");
+        rTeam.setDisplayName("");
         rTeam.setNameTagVisibility("always");
         rTeam.setCollisionRule("always");
         rTeam.setFriendlyFire((byte) 0);
@@ -79,7 +74,7 @@ public class TeamHandler {
         rTeam.setSuffix("");
         this.teams.put("r", rTeam);
         Team cTeam = new Team("0c");
-        cTeam.setDisplayName("c");
+        cTeam.setDisplayName("");
         cTeam.setNameTagVisibility("always");
         cTeam.setCollisionRule("always");
         cTeam.setFriendlyFire((byte) 0);
@@ -173,7 +168,7 @@ public class TeamHandler {
             Team realTeam = this.teams.get(t);
             net.md_5.bungee.protocol.packet.Team team = new net.md_5.bungee.protocol.packet.Team();
             team.setName(realTeam.getName());
-            //"{\"text\":\"a\"}"
+            //"{\"text\":\"a\"}"  ComponentSerializer.toString(TextComponent.fromLegacyText(realTeam.getDisplayName()))
             team.setDisplayName(ComponentSerializer.toString(TextComponent.fromLegacyText(realTeam.getDisplayName())));
             team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(realTeam.getPrefix())));
             team.setSuffix(ComponentSerializer.toString(TextComponent.fromLegacyText(realTeam.getSuffix())));
@@ -185,7 +180,7 @@ public class TeamHandler {
             for(String oldPlayer : realTeam.getPlayers()) {
                 if(ProxyServer.getInstance().getPlayer(oldPlayer) != null) {
                     UUID oldPlayerUUID = ProxyServer.getInstance().getPlayer(oldPlayer).getUniqueId();
-                    //oldPlayer = "§T§P§₄";
+                    //oldPlayer = "name"; //§T§P§₄
                     if(!plugin.isPlayerListed(oldPlayerUUID) && p.hasPermission("cvvanish.override")) {
                         newPlayerList.add(oldPlayer); //todo do strike
                         //team.setColor(18);

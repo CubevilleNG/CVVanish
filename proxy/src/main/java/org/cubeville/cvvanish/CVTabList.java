@@ -5,10 +5,13 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.ConcurrentHashMap;
 
+import net.md_5.bungee.UserConnection;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.chat.ComponentSerializer;
+import net.md_5.bungee.connection.LoginResult;
+import net.md_5.bungee.protocol.Property;
 import net.md_5.bungee.protocol.packet.PlayerListItem;
 import net.md_5.bungee.tab.TabList;
 
@@ -106,7 +109,7 @@ public class CVTabList extends TabList
                 updatedItemList.add(item);
             }
             else { // Player
-                if(playerListItem.getAction() == PlayerListItem.Action.ADD_PLAYER) {
+                if(playerListItem.getAction() == PlayerListItem.Action.ADD_PLAYER) { //PlayerListItem.Action.ADD_PLAYER
                     //if(plugin.isConnectedPlayer(item.getUuid())) {
                         playerAddPacketsLock.lock();
                         boolean lck = true;
@@ -128,9 +131,9 @@ public class CVTabList extends TabList
                                 //name = "§m" + name;
                                 //name = plugin.getPrefix(item.getUuid()) + name;
                                 //if(name.length() > 16) name = name.substring(0, 16);
-                                //item.setUsername("§T§P§₄");
-                                //item.setDisplayName("§T§P§₄");
-                                //item.setDisplayName(ComponentSerializer.toString(TextComponent.fromLegacyText(name)));
+                                //item.setUsername("i");
+                                //item.setDisplayName("name"); //§T§P§₄
+                                //item.setDisplayName(ComponentSerializer.toString(TextComponent.fromLegacyText("name")));
                                 //System.out.println(item.);
                                 
                                 playerAddPackets.put(item.getUuid(), item);
@@ -140,6 +143,7 @@ public class CVTabList extends TabList
                                 
                                 plugin.addPacketAvailable(item.getUuid());
                                 //sendPacketToAll(item);
+                                //anotherPacket(player);
 
                                 //todo new
                             //}
@@ -166,6 +170,27 @@ public class CVTabList extends TabList
             playerListItem.setItems(items);
             player.unsafe().sendPacket(playerListItem);
         }
+    }
+
+    public void anotherPacket(ProxiedPlayer player) {
+        PlayerListItem pli = new PlayerListItem();
+        pli.setAction(PlayerListItem.Action.ADD_PLAYER);
+        PlayerListItem.Item item = new PlayerListItem.Item();
+        item.setPing(player.getPing());
+        item.setUsername(player.getName());
+        item.setGamemode(1);
+        item.setUuid(player.getUniqueId());
+        item.setProperties(new Property[0]);
+        LoginResult loginResult = ((UserConnection) player).
+                getPendingConnection().getLoginProfile();
+        if (loginResult != null) {
+            Property[] props = loginResult.getProperties();
+            item.setProperties(props);
+        } else {
+            item.setProperties(new Property[0]);
+        }
+        pli.setItems(new PlayerListItem.Item[]{item});
+        this.player.unsafe().sendPacket(pli);
     }
 
     @Override
