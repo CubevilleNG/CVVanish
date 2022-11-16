@@ -56,7 +56,7 @@ public class TeamHandler {
         }
     }
 
-    public void init(ProxiedPlayer player) {
+    public void initPDM() {
         if(this.playerDataManager == null) {
             System.out.println("PDM was null...attempting to get instance");
             try {
@@ -67,6 +67,10 @@ public class TeamHandler {
                 System.out.println("Getting PDM instance failed");
             }
         }
+    }
+
+    public void init(ProxiedPlayer player) {
+        initPDM();
         String [] rank = getRank(player);
         String currentTeam = teamManager.getPlayerTeam(player.getUniqueId()) == null ? null : teamManager.getPlayerTeam(player.getUniqueId()).getName();
         String newTeam = rank[0] + player.getName();

@@ -11,6 +11,7 @@ import net.md_5.bungee.connection.LoginResult;
 import net.md_5.bungee.protocol.Property;
 import net.md_5.bungee.protocol.packet.PlayerListItem;
 import net.md_5.bungee.tab.TabList;
+import org.cubeville.cvvanish.teams.TeamHandler;
 import org.cubeville.cvvanish.teams.TeamManager;
 
 public class CVTabList extends TabList
@@ -28,6 +29,11 @@ public class CVTabList extends TabList
     private static TeamManager teamManager;
     public static void setTeamManager(TeamManager teamManagers) {
         teamManager = teamManagers;
+    }
+
+    private static TeamHandler teamHandler;
+    public static void setTeamHandler(TeamHandler teamHandlers) {
+        teamHandler = teamHandlers;
     }
 
     private static ConcurrentHashMap<UUID, CVTabList> instances = new ConcurrentHashMap<>();
@@ -59,7 +65,9 @@ public class CVTabList extends TabList
     }
 
     public void hidePlayer(UUID uuid) {
-        sendSingleItemPacket(PlayerListItem.Action.REMOVE_PLAYER, createUuidItem(uuid));
+        if(!teamHandler.canSenderSeePlayerState(player.getUniqueId(), uuid)) {
+            sendSingleItemPacket(PlayerListItem.Action.REMOVE_PLAYER, createUuidItem(uuid));
+        }
     }
 
     public void showPlayer(UUID uuid) {
