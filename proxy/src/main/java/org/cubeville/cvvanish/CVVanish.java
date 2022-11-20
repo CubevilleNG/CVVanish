@@ -20,7 +20,6 @@ import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.YamlConfiguration;
 import net.md_5.bungee.event.EventHandler;
 
-import net.md_5.bungee.protocol.packet.PlayerListItem;
 import org.cubeville.cvipc.CVIPC;
 import org.cubeville.cvipc.IPCInterface;
 
@@ -49,16 +48,15 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
     private static CVVanish instance;
     public static CVVanish getInstance() { return instance; }
 
-    private PlayerDataManager playerDataManager;
-
     public TeamManager teamManager;
     public TeamHandler teamHandler;
+    public PlayerDataManager playerDataManager;
     
     @Override
     public void onEnable() {
         PluginManager pm = getProxy().getPluginManager();
         pm.registerCommand(this, new VCommand(this));
-        teamManager = new TeamManager();
+        teamManager = new TeamManager(this);
         teamHandler = new TeamHandler(this, teamManager);
         pm.registerCommand(this, new VReloadCommand(teamHandler));
         pm.registerListener(this, this);
@@ -85,6 +83,23 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         actionBarNotifier.start();
 
         instance = this;
+    }
+
+    public PlayerDataManager getPDM() {
+        return this.playerDataManager;
+    }
+
+    public void initPDM() {
+        if(this.playerDataManager == null) {
+            System.out.println("PDM was null...attempting to get instance");
+            try {
+                this.playerDataManager = PlayerDataManager.getInstance();
+                System.out.println("PDM instance successfully retrieved");
+            } catch(Exception e) {
+                e.printStackTrace();
+                System.out.println("Getting PDM instance failed");
+            }
+        }
     }
 
     public String getPlayerVisibleName(UUID uuid) {
@@ -127,7 +142,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         if(player.hasPermission("cvvanish.default.interactdisabled"))
             interactDisabledPlayers.add(uuid);
 
-        teamHandler.initPDM();
+        initPDM();
         // show the players already on the server to the new player
         for(UUID connectedPlayer: connectedPlayers) {
             if(!connectedPlayer.equals(event.getPlayer().getUniqueId()) &&

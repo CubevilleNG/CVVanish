@@ -9,7 +9,6 @@ import net.md_5.bungee.chat.ComponentSerializer;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
-import org.cubeville.cvchat.playerdata.PlayerDataManager;
 import org.cubeville.cvvanish.CVVanish;
 
 import java.io.File;
@@ -20,7 +19,6 @@ public class TeamHandler {
 
     public CVVanish plugin;
     public TeamManager teamManager;
-    public PlayerDataManager playerDataManager;
 
     public HashMap<String, HashMap<String, String>> serverTeamConfig;
 
@@ -60,21 +58,8 @@ public class TeamHandler {
 
     }
 
-    public void initPDM() {
-        if(this.playerDataManager == null) {
-            System.out.println("PDM was null...attempting to get instance");
-            try {
-                this.playerDataManager = PlayerDataManager.getInstance();
-                System.out.println("PDM instance successfully retrieved");
-            } catch(Exception e) {
-                e.printStackTrace();
-                System.out.println("Getting PDM instance failed");
-            }
-        }
-    }
-
     public void init(ProxiedPlayer player) {
-        initPDM();
+        plugin.initPDM();
         String [] rank = getRank(player);
         String currentTeam = teamManager.getPlayerTeam(player.getUniqueId()) == null ? null : teamManager.getPlayerTeam(player.getUniqueId()).getName();
         String newTeam = rank[0] + player.getName();
@@ -88,6 +73,16 @@ public class TeamHandler {
             team = teamManager.addPlayerTeam(player.getUniqueId(), newTeam, rank[1]);
         } else {
             team = teamManager.getPlayerTeam(player.getUniqueId());
+            String pname = team.getPrefix();
+            String color = pname.substring(0, pname.indexOf("§") + 2);
+            while(pname.contains("§")) {
+                pname = pname.substring(pname.indexOf("§") + 2);
+            }
+            String alias = plugin.getPDM().getPlayerVisibleName(player.getUniqueId());
+            if(!pname.equals(alias)) {
+                pname = alias;
+                team = teamManager.changePlayerTeamName(player.getUniqueId(), color + pname);
+            }
         }
         if(team == null) {
             System.out.println("Creation or retrieval of Team failed! Cancelling packet send");
@@ -255,7 +250,7 @@ public class TeamHandler {
     }
 
     public boolean canSenderSeePlayerState(UUID sender, UUID player) {
-        return this.playerDataManager.outranksOrEqual(sender, player);
+        return plugin.getPDM().outranksOrEqual(sender, player);
     }
 
     public String[] getRank(ProxiedPlayer player) {
