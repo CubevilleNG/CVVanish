@@ -86,7 +86,12 @@ public class TeamManager {
         team.setColor(15);
         team.setPrefix("§" + color + p.getName());
         team.setSuffix("");
-        String fakeName = addFakeName(uuid);
+        String fakeName;
+        if(this.fakeNames.containsKey(uuid)) {
+            fakeName = this.fakeNames.get(uuid);
+        } else {
+            fakeName = addFakeName(uuid);
+        }
         team.setPlayers(Collections.singleton(fakeName));
         this.allTeams.put(fakeName, team);
         return team;
@@ -96,7 +101,6 @@ public class TeamManager {
         Team team = getPlayerTeam(uuid);
         if(team == null) return null;
         this.allTeams.remove(this.fakeNames.get(uuid));
-        this.fakeNames.remove(uuid);
         return team;
     }
 }

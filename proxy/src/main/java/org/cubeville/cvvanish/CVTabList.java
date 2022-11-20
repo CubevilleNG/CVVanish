@@ -6,6 +6,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.ConcurrentHashMap;
 
 import net.md_5.bungee.UserConnection;
+import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.connection.LoginResult;
 import net.md_5.bungee.protocol.Property;
@@ -65,7 +66,7 @@ public class CVTabList extends TabList
     }
 
     public void hidePlayer(UUID uuid) {
-        if(!teamHandler.canSenderSeePlayerState(player.getUniqueId(), uuid)) {
+        if(!teamHandler.canSenderSeePlayerState(player.getUniqueId(), uuid) || !plugin.getConnectedPlayers().contains(uuid)) {
             sendSingleItemPacket(PlayerListItem.Action.REMOVE_PLAYER, createUuidItem(uuid));
         }
     }
@@ -85,7 +86,7 @@ public class CVTabList extends TabList
         super( player );
     }
 
-    private void sendSingleItemPacket(PlayerListItem.Action action, PlayerListItem.Item item) {
+    public void sendSingleItemPacket(PlayerListItem.Action action, PlayerListItem.Item item) {
         PlayerListItem playerListItem = new PlayerListItem();
         playerListItem.setAction(action);
         PlayerListItem.Item items[] = new PlayerListItem.Item[1];
@@ -94,7 +95,7 @@ public class CVTabList extends TabList
         player.unsafe().sendPacket(playerListItem);
     }
 
-    private PlayerListItem.Item createUuidItem(UUID uuid) {
+    public PlayerListItem.Item createUuidItem(UUID uuid) {
         PlayerListItem.Item ret = new PlayerListItem.Item();
         ret.setUuid(uuid);
         return ret;

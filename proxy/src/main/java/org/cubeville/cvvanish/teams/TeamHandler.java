@@ -54,6 +54,10 @@ public class TeamHandler {
         } catch(IOException e) {
             System.out.println("Could not load configuration");
         }
+        for(ProxiedPlayer p : ProxyServer.getInstance().getPlayers()) {
+            init(p);
+        }
+
     }
 
     public void initPDM() {
@@ -117,9 +121,11 @@ public class TeamHandler {
                         newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
                         player.unsafe().sendPacket(newTeam);
                     } else {
+                        newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(color + oldPrefix)));
                         player.unsafe().sendPacket(newTeam);
                     }
                 } else {
+                    newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(color + oldPrefix)));
                     player.unsafe().sendPacket(newTeam);
                 }
             }
@@ -148,10 +154,13 @@ public class TeamHandler {
                         String newPrefix = color + "§o" + oldPrefix;
                         team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
                         p.unsafe().sendPacket(team);
+                        System.out.println(p.getName() + " was sent an invis packet for player " + team.getPrefix());
                     } else {
+                        team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(color + oldPrefix)));
                         p.unsafe().sendPacket(team);
                     }
                 } else {
+                    team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(color + oldPrefix)));
                     p.unsafe().sendPacket(team);
                 }
             }
@@ -181,8 +190,7 @@ public class TeamHandler {
             while(oldPrefix.contains("§")) {
                 oldPrefix = oldPrefix.substring(oldPrefix.indexOf("§") + 2);
             }
-            String newPrefix = color + oldPrefix;
-            team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
+            team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(color + oldPrefix)));
             team.setMode((byte) 0);
             p.unsafe().sendPacket(team);
         }
@@ -195,19 +203,16 @@ public class TeamHandler {
         team.setNameTagVisibility(serverConfig.get("nametags"));
         for(UUID uuid : plugin.getConnectedPlayers()) {
             ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
-            p.unsafe().sendPacket(team);
-            String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(team.getPrefix()));
-            String color = oldPrefix.substring(0, oldPrefix.indexOf("§") + 2);
-            while(oldPrefix.contains("§")) {
-                oldPrefix = oldPrefix.substring(oldPrefix.indexOf("§") + 2);
-            }
-            String newPrefix = color + "§o" + oldPrefix;
-            team.setMode((byte) 0);
             if(canSenderSeePlayerState(p.getUniqueId(), player.getUniqueId())) {
-                team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
                 p.unsafe().sendPacket(team);
-            } else {
-                team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(color + oldPrefix)));
+                String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(team.getPrefix()));
+                String color = oldPrefix.substring(0, oldPrefix.indexOf("§") + 2);
+                while(oldPrefix.contains("§")) {
+                    oldPrefix = oldPrefix.substring(oldPrefix.indexOf("§") + 2);
+                }
+                String newPrefix = color + "§o" + oldPrefix;
+                team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
+                team.setMode((byte) 0);
                 p.unsafe().sendPacket(team);
             }
         }
@@ -220,8 +225,8 @@ public class TeamHandler {
         team.setNameTagVisibility(serverConfig.get("nametags"));
         for(UUID uuid : plugin.getConnectedPlayers()) {
             ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
-            p.unsafe().sendPacket(team);
             if(canSenderSeePlayerState(p.getUniqueId(), player.getUniqueId())) {
+                p.unsafe().sendPacket(team);
                 String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(team.getPrefix()));
                 String color = oldPrefix.substring(0, oldPrefix.indexOf("§") + 2);
                 while(oldPrefix.contains("§")) {

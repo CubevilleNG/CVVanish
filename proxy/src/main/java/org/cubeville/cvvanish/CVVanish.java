@@ -20,6 +20,7 @@ import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.YamlConfiguration;
 import net.md_5.bungee.event.EventHandler;
 
+import net.md_5.bungee.protocol.packet.PlayerListItem;
 import org.cubeville.cvipc.CVIPC;
 import org.cubeville.cvipc.IPCInterface;
 
@@ -150,9 +151,9 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         if(unlisted) unlistedPlayers.remove(uuid);
         invisiblePlayers.remove(uuid);
         for(UUID targetPlayer: connectedPlayers) {
-            if(unlisted == false ||
-               hasPermission(targetPlayer, "cvvanish.override")) {
+            if(!unlisted || teamHandler.canSenderSeePlayerState(targetPlayer, uuid)) {
                 CVTabList.getInstanceFor(targetPlayer).hidePlayer(uuid);
+                //CVTabList.getInstanceFor(targetPlayer).sendSingleItemPacket(PlayerListItem.Action.REMOVE_PLAYER, CVTabList.getInstanceFor(targetPlayer).createUuidItem(uuid));
             }
         }
         
