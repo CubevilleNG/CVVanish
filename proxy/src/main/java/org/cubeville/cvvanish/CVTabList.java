@@ -163,27 +163,6 @@ public class CVTabList extends TabList
         }
     }
 
-    public void anotherPacket(ProxiedPlayer player) {
-        PlayerListItem pli = new PlayerListItem();
-        pli.setAction(PlayerListItem.Action.ADD_PLAYER);
-        PlayerListItem.Item item = new PlayerListItem.Item();
-        item.setPing(player.getPing());
-        item.setUsername(player.getName());
-        item.setGamemode(1);
-        item.setUuid(player.getUniqueId());
-        item.setProperties(new Property[0]);
-        LoginResult loginResult = ((UserConnection) player).
-                getPendingConnection().getLoginProfile();
-        if (loginResult != null) {
-            Property[] props = loginResult.getProperties();
-            item.setProperties(props);
-        } else {
-            item.setProperties(new Property[0]);
-        }
-        pli.setItems(new PlayerListItem.Item[]{item});
-        this.player.unsafe().sendPacket(pli);
-    }
-
     @Override
     public void onPingChange(int ping)
     {

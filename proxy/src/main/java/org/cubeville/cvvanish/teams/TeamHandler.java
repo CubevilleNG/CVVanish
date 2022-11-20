@@ -154,7 +154,6 @@ public class TeamHandler {
                         String newPrefix = color + "§o" + oldPrefix;
                         team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
                         p.unsafe().sendPacket(team);
-                        System.out.println(p.getName() + " was sent an invis packet for player " + team.getPrefix());
                     } else {
                         team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(color + oldPrefix)));
                         p.unsafe().sendPacket(team);

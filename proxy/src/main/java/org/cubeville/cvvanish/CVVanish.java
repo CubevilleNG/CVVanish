@@ -153,7 +153,6 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         for(UUID targetPlayer: connectedPlayers) {
             if(!unlisted || teamHandler.canSenderSeePlayerState(targetPlayer, uuid)) {
                 CVTabList.getInstanceFor(targetPlayer).hidePlayer(uuid);
-                //CVTabList.getInstanceFor(targetPlayer).sendSingleItemPacket(PlayerListItem.Action.REMOVE_PLAYER, CVTabList.getInstanceFor(targetPlayer).createUuidItem(uuid));
             }
         }
         
@@ -174,9 +173,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         //       be better to have the original packets forwarded. (Current workaround: The mc vanish plugin sends an additional player spawn packet after a few seconds)
         boolean unlisted = unlistedPlayers.contains(uuid);
         for(UUID targetPlayer: connectedPlayers) {
-            if(hasPermission(targetPlayer, "cvvanish.override") ||
-               unlisted == false ||
-               targetPlayer.equals(uuid)) {
+            if(teamHandler.canSenderSeePlayerState(targetPlayer, uuid) || !unlisted || targetPlayer.equals(uuid)) {
                 CVTabList.getInstanceFor(targetPlayer).showPlayer(uuid);
             }
         }
@@ -185,9 +182,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
     public void sendUpdatedPacket(UUID uuid) {
         boolean unlisted = unlistedPlayers.contains(uuid);
         for(UUID targetPlayer: connectedPlayers) {
-            if(hasPermission(targetPlayer, "cvvanish.override") ||
-               unlisted == false ||
-               targetPlayer.equals(uuid)) {
+            if(teamHandler.canSenderSeePlayerState(targetPlayer, uuid) || !unlisted || targetPlayer.equals(uuid)) {
                 CVTabList.getInstanceFor(targetPlayer).hidePlayer(uuid);
                 CVTabList.getInstanceFor(targetPlayer).showPlayer(uuid);
             }
