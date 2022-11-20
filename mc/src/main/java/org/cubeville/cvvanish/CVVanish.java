@@ -209,11 +209,11 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
             if(!p.getUniqueId().equals(player.getUniqueId())) {
                 if(isPlayerInvisible(player) &&
                    p.hasPermission("cvvanish.override") == false) {
-                    p.hidePlayer(this, player); // TODO: different signature in 1.15
+                    p.hidePlayer(this, player);
                 }
                 if(player.hasPermission("cvvanish.override") == false &&
                    isPlayerInvisible(p)) {
-                    player.hidePlayer(this, p); // TODO: different signature in 1.15
+                    player.hidePlayer(this, p);
                 }
             }
         }
