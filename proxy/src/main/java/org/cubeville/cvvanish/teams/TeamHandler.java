@@ -108,10 +108,12 @@ public class TeamHandler {
                 while(oldPrefix.contains("§")) {
                     oldPrefix = oldPrefix.substring(oldPrefix.indexOf("§") + 2);
                 }
-                if(plugin.isPlayerUnlisted(p.getUniqueId()) && canSenderSeePlayerState(player.getUniqueId(), p.getUniqueId())) {
-                    String newPrefix = color + "§m" + oldPrefix;
-                    newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
-                    player.unsafe().sendPacket(newTeam);
+                if(plugin.isPlayerUnlisted(p.getUniqueId())) {
+                    if(canSenderSeePlayerState(player.getUniqueId(), p.getUniqueId())) {
+                        String newPrefix = color + "§m" + oldPrefix;
+                        newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
+                        player.unsafe().sendPacket(newTeam);
+                    }
                 } else if(plugin.isPlayerInvisible(p.getUniqueId())) {
                     if(canSenderSeePlayerState(player.getUniqueId(), p.getUniqueId())) {
                         String newPrefix = color + "§o" + oldPrefix;
@@ -142,10 +144,12 @@ public class TeamHandler {
                 while(oldPrefix.contains("§")) {
                     oldPrefix = oldPrefix.substring(oldPrefix.indexOf("§") + 2);
                 }
-                if(plugin.isPlayerUnlisted(player.getUniqueId()) && canSenderSeePlayerState(p.getUniqueId(), player.getUniqueId())) {
-                    String newPrefix = color + "§m" + oldPrefix;
-                    team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
-                    p.unsafe().sendPacket(team);
+                if(plugin.isPlayerUnlisted(player.getUniqueId())) {
+                    if(canSenderSeePlayerState(p.getUniqueId(), player.getUniqueId())) {
+                        String newPrefix = color + "§m" + oldPrefix;
+                        team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
+                        p.unsafe().sendPacket(team);
+                    }
                 } else if(plugin.isPlayerInvisible(player.getUniqueId())) {
                     if(canSenderSeePlayerState(p.getUniqueId(), player.getUniqueId())) {
                         String newPrefix = color + "§o" + oldPrefix;
