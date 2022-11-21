@@ -128,17 +128,16 @@ public class CVTabList extends TabList
 
                                 String fakeName = teamManager.getFakeName(item.getUuid());
                                 if(fakeName == null) {
-                                    System.out.println("fake name was null! Cannot set username");
+                                    System.out.println("fake name was null! Cannot set username. User should relog");
                                 } else {
                                     item.setUsername(fakeName);
-                                }
-                                
-                                playerAddPackets.put(item.getUuid(), item);
+                                    playerAddPackets.put(item.getUuid(), item);
 
-                                playerAddPacketsLock.unlock();
-                                lck = false;
-                                
-                                plugin.addPacketAvailable(item.getUuid());
+                                    playerAddPacketsLock.unlock();
+                                    lck = false;
+
+                                    plugin.addPacketAvailable(item.getUuid());
+                                }
                             }
                         }
                         finally {

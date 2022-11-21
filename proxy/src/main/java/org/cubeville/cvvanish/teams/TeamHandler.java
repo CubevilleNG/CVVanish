@@ -62,7 +62,7 @@ public class TeamHandler {
         plugin.initPDM();
         String [] rank = getRank(player);
         String currentTeam = teamManager.getPlayerTeam(player.getUniqueId()) == null ? null : teamManager.getPlayerTeam(player.getUniqueId()).getName();
-        String newTeam = rank[0] + player.getName();
+        String newTeam = rank[0] + plugin.getPDM().getPlayerVisibleName(player.getUniqueId());
         Team team;
         Team destroyTeam;
         if(currentTeam == null) {     //proxy doesn't have the player in a team
@@ -91,6 +91,7 @@ public class TeamHandler {
         }
         sendAllCreatePacketsToPlayer(player);
         sendCreatePacketToServer(getTeamPacket(team), player);
+        plugin.showExistingPlayers(player.getUniqueId());
     }
 
     public void sendAllCreatePacketsToPlayer(ProxiedPlayer player) {

@@ -141,13 +141,13 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
 
         if(player.hasPermission("cvvanish.default.interactdisabled"))
             interactDisabledPlayers.add(uuid);
+    }
 
-        initPDM();
-        // show the players already on the server to the new player
+    public void showExistingPlayers(UUID uuid) {
         for(UUID connectedPlayer: connectedPlayers) {
-            if((!connectedPlayer.equals(event.getPlayer().getUniqueId()) && (!unlistedPlayers.contains(connectedPlayer))
-                    || teamHandler.canSenderSeePlayerState(event.getPlayer().getUniqueId(), connectedPlayer))) {
-                CVTabList.getInstanceFor(event.getPlayer().getUniqueId()).showPlayer(connectedPlayer);
+            if(!connectedPlayer.equals(uuid) &&
+                    (!unlistedPlayers.contains(connectedPlayer) || teamHandler.canSenderSeePlayerState(uuid, connectedPlayer))) {
+                CVTabList.getInstanceFor(uuid).showPlayer(connectedPlayer);
             }
         }
     }
