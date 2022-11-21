@@ -145,8 +145,8 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         initPDM();
         // show the players already on the server to the new player
         for(UUID connectedPlayer: connectedPlayers) {
-            if(!connectedPlayer.equals(event.getPlayer().getUniqueId()) &&
-               (!unlistedPlayers.contains(connectedPlayer) || teamHandler.canSenderSeePlayerState(event.getPlayer().getUniqueId(), connectedPlayer))) {
+            if((!connectedPlayer.equals(event.getPlayer().getUniqueId()) && (!unlistedPlayers.contains(connectedPlayer))
+                    || teamHandler.canSenderSeePlayerState(event.getPlayer().getUniqueId(), connectedPlayer))) {
                 CVTabList.getInstanceFor(event.getPlayer().getUniqueId()).showPlayer(connectedPlayer);
             }
         }
@@ -282,8 +282,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
             else
                 unlistedPlayers.remove(uuid);
             for(UUID targetPlayer: connectedPlayers) {
-                if(targetPlayer.equals(uuid) == false &&
-                   hasPermission(targetPlayer, "cvvanish.override") == false) {
+                if(!targetPlayer.equals(uuid) && !teamHandler.canSenderSeePlayerState(targetPlayer, uuid)) {
                     if(unlisted)
                         CVTabList.getInstanceFor(targetPlayer).hidePlayer(uuid);
                     else

@@ -70,6 +70,7 @@ public class TeamHandler {
         } else if(!currentTeam.equalsIgnoreCase(newTeam)) {     //proxy has the player in the wrong team (only use case is probably a promotion?)
             destroyTeam = teamManager.removePlayerTeam(player.getUniqueId());
             sendRemovePacketToServer(getTeamPacket(destroyTeam));
+            sendRemovePacketsToPlayer(player);
             team = teamManager.addPlayerTeam(player.getUniqueId(), newTeam, rank[1]);
         } else {
             team = teamManager.getPlayerTeam(player.getUniqueId());
@@ -158,6 +159,14 @@ public class TeamHandler {
                     p.unsafe().sendPacket(team);
                 }
             }
+        }
+    }
+
+    public void sendRemovePacketsToPlayer(ProxiedPlayer player) {
+        for(Team t : teamManager.getAllTeams()) {
+            net.md_5.bungee.protocol.packet.Team team = getTeamPacket(t);
+            team.setMode((byte) 1);
+            player.unsafe().sendPacket(team);
         }
     }
 
