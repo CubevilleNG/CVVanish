@@ -72,12 +72,14 @@ public class CVTabList extends TabList
     }
 
     public void showPlayer(UUID uuid) {
-        playerAddPacketsLock.lock();
-        try {
-            sendSingleItemPacket(PlayerListItem.Action.ADD_PLAYER, playerAddPackets.get(uuid));
-        }
-        finally {
-            playerAddPacketsLock.unlock();
+        if(playerAddPackets.get(uuid) != null) {
+            playerAddPacketsLock.lock();
+            try {
+                sendSingleItemPacket(PlayerListItem.Action.ADD_PLAYER, playerAddPackets.get(uuid));
+            }
+            finally {
+                playerAddPacketsLock.unlock();
+            }
         }
     }
 
