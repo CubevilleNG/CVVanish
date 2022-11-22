@@ -162,6 +162,8 @@ public class TeamHandler {
                 } else {
                     team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(color + oldPrefix)));
                     p.unsafe().sendPacket(team);
+                    System.out.println("Sending packet of " + player.getName() + " to " + p.getName() + " without formatting?");
+                    System.out.println("is player unlisted?: " + plugin.isPlayerUnlisted(player.getUniqueId()));
                 }
             }
         }
