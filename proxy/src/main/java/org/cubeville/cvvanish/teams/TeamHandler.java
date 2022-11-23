@@ -151,6 +151,7 @@ public class TeamHandler {
                     oldPrefix = oldPrefix.substring(oldPrefix.indexOf("§") + 2);
                 }
                 if(plugin.isPlayerUnlisted(player.getUniqueId())) {
+                    System.out.println(player.getName() + " is unlisted");
                     if(canSenderSeePlayerState(p.getUniqueId(), player.getUniqueId())) {
                         team.setMode((byte) 1);
                         p.unsafe().sendPacket(team);
@@ -158,8 +159,10 @@ public class TeamHandler {
                         String newPrefix = color + "§m" + oldPrefix;
                         team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
                         p.unsafe().sendPacket(team);
+                        System.out.println("sending strikethrough packet of " + player.getName() + " to " + p.getName());
                     }
                 } else if(plugin.isPlayerInvisible(player.getUniqueId())) {
+                    System.out.println(player.getName() + " is invisible");
                     if(canSenderSeePlayerState(p.getUniqueId(), player.getUniqueId())) {
                         team.setMode((byte) 1);
                         p.unsafe().sendPacket(team);
@@ -167,13 +170,17 @@ public class TeamHandler {
                         String newPrefix = color + "§o" + oldPrefix;
                         team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
                         p.unsafe().sendPacket(team);
+                        System.out.println("sending italics packet of " + player.getName() + " to " + p.getName());
                     } else {
                         team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(color + oldPrefix)));
                         p.unsafe().sendPacket(team);
+                        System.out.println("sending normal packet of " + player.getName() + " to " + p.getName());
                     }
                 } else {
+                    System.out.println(player.getName() + " is neither invisible nor unlisted");
                     team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(color + oldPrefix)));
                     p.unsafe().sendPacket(team);
+                    System.out.println("sending normal packet of " + player.getName() + " to " + p.getName());
                 }
             }
         }
