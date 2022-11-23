@@ -110,12 +110,18 @@ public class TeamHandler {
                 }
                 if(plugin.isPlayerUnlisted(p.getUniqueId())) {
                     if(canSenderSeePlayerState(player.getUniqueId(), p.getUniqueId())) {
+                        newTeam.setMode((byte) 1);
+                        player.unsafe().sendPacket(newTeam);
+                        newTeam.setMode((byte) 0);
                         String newPrefix = color + "§m" + oldPrefix;
                         newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
                         player.unsafe().sendPacket(newTeam);
                     }
                 } else if(plugin.isPlayerInvisible(p.getUniqueId())) {
                     if(canSenderSeePlayerState(player.getUniqueId(), p.getUniqueId())) {
+                        newTeam.setMode((byte) 1);
+                        player.unsafe().sendPacket(newTeam);
+                        newTeam.setMode((byte) 0);
                         String newPrefix = color + "§o" + oldPrefix;
                         newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
                         player.unsafe().sendPacket(newTeam);
@@ -146,12 +152,18 @@ public class TeamHandler {
                 }
                 if(plugin.isPlayerUnlisted(player.getUniqueId())) {
                     if(canSenderSeePlayerState(p.getUniqueId(), player.getUniqueId())) {
+                        team.setMode((byte) 1);
+                        p.unsafe().sendPacket(team);
+                        team.setMode((byte) 0);
                         String newPrefix = color + "§m" + oldPrefix;
                         team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
                         p.unsafe().sendPacket(team);
                     }
                 } else if(plugin.isPlayerInvisible(player.getUniqueId())) {
                     if(canSenderSeePlayerState(p.getUniqueId(), player.getUniqueId())) {
+                        team.setMode((byte) 1);
+                        p.unsafe().sendPacket(team);
+                        team.setMode((byte) 0);
                         String newPrefix = color + "§o" + oldPrefix;
                         team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
                         p.unsafe().sendPacket(team);
@@ -162,8 +174,6 @@ public class TeamHandler {
                 } else {
                     team.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(color + oldPrefix)));
                     p.unsafe().sendPacket(team);
-                    System.out.println("Sending packet of " + player.getName() + " to " + p.getName() + " without formatting?");
-                    System.out.println("is player unlisted?: " + plugin.isPlayerUnlisted(player.getUniqueId()));
                 }
             }
         }
