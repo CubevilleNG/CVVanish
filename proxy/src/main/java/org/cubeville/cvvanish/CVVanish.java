@@ -180,7 +180,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         interactDisabledPlayers.remove(uuid);
         Team team = teamManager.getPlayerTeam(event.getPlayer().getUniqueId());
         if(team != null) {
-            teamHandler.sendRemovePacketToServer(teamHandler.getTeamPacket(team));
+            teamHandler.sendRemovePacketToServer(teamHandler.getTeamPacket(team), unlisted, event.getPlayer().getUniqueId());
         }
     }
 

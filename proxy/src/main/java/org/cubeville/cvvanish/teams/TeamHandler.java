@@ -190,6 +190,21 @@ public class TeamHandler {
         }
     }
 
+    public void sendRemovePacketToServer(net.md_5.bungee.protocol.packet.Team team, boolean unlisted, UUID player) {
+        team.setMode((byte) 1);
+        for(UUID uuid : plugin.getConnectedPlayers()) {
+            if(unlisted) {
+                if(canSenderSeePlayerState(uuid, player)) {
+                    ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
+                    p.unsafe().sendPacket(team);
+                }
+            } else {
+                ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
+                p.unsafe().sendPacket(team);
+            }
+        }
+    }
+
     public void sendVisiblePacketToServer(net.md_5.bungee.protocol.packet.Team team, ProxiedPlayer player) {
         team.setMode((byte) 1);
         HashMap<String, String> serverConfig = this.serverTeamConfig.get(player.getServer().getInfo().getName());
