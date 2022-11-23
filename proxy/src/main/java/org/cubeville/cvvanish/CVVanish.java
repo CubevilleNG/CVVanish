@@ -15,6 +15,7 @@ import net.md_5.bungee.api.event.ServerSwitchEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
+import net.md_5.bungee.api.score.Team;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.YamlConfiguration;
@@ -177,6 +178,10 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         nightvisionEnabledPlayers.remove(uuid);
         pickupDisabledPlayers.remove(uuid);
         interactDisabledPlayers.remove(uuid);
+        Team team = teamManager.getPlayerTeam(event.getPlayer().getUniqueId());
+        if(team != null) {
+            teamHandler.sendRemovePacketToServer(teamHandler.getTeamPacket(team));
+        }
     }
 
     public void updatePlayer(UUID uuid) {
