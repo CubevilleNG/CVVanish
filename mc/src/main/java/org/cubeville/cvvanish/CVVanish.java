@@ -1,9 +1,18 @@
 package org.cubeville.cvvanish;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import com.comphenix.protocol.PacketType;
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.ProtocolManager;
+import com.comphenix.protocol.events.ListenerPriority;
+import com.comphenix.protocol.events.PacketAdapter;
+import com.comphenix.protocol.events.PacketContainer;
+import com.comphenix.protocol.events.PacketEvent;
+import com.comphenix.protocol.wrappers.WrappedWatchableObject;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -40,6 +49,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
 
     private CVIPC ipc;
     private IOpenInv openInv;
+    private ProtocolManager protocolManager;
     
     private Set<UUID> invertedVisibility = new HashSet<>();
     private Set<UUID> pickupInvertedPlayers = new HashSet<>();
@@ -61,6 +71,9 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
 	if(openInv == null) {
 	    System.out.println("OpenInv not loaded!");
 	}
+
+        protocolManager = ProtocolLibrary.getProtocolManager();
+        petListener();
 	
         interactDisallowedMaterials.add(Material.ACACIA_PRESSURE_PLATE);
         interactDisallowedMaterials.add(Material.BIRCH_PRESSURE_PLATE);
@@ -93,6 +106,25 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
 
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         return false;
+    }
+
+    public void petListener() {
+        protocolManager.addPacketListener(new PacketAdapter(this, ListenerPriority.NORMAL, PacketType.Play.Server.ENTITY_METADATA) {
+            @Override
+            public void onPacketSending(PacketEvent event) {
+                if(event.getPacketType() == PacketType.Play.Server.ENTITY_METADATA) {
+                    for(WrappedWatchableObject o : event.getPacket().getWatchableCollectionModifier().read(0)) {
+                        if(o.getWatcherObject().getIndex() == 18) {
+                            System.out.println(o);
+                            if(o.getValue().toString().contains("[") && o.getValue().toString().contains("]")) {
+                                o.setValue(Optional.empty());
+                            }
+                            System.out.println(o);
+                        }
+                    }
+                }
+            }
+        });
     }
 
     public void process(String channel, String message) {
