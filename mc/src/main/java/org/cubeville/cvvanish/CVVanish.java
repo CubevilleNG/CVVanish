@@ -115,11 +115,11 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
                 if(event.getPacketType() == PacketType.Play.Server.ENTITY_METADATA) {
                     for(WrappedWatchableObject o : event.getPacket().getWatchableCollectionModifier().read(0)) {
                         if(o.getWatcherObject().getIndex() == 18) {
-                            System.out.println(o);
+                            //System.out.println(o);
                             if(o.getValue().toString().contains("[") && o.getValue().toString().contains("]")) {
                                 o.setValue(Optional.empty());
                             }
-                            System.out.println(o);
+                            //System.out.println(o);
                         }
                     }
                 }
