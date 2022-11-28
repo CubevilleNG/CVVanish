@@ -156,6 +156,11 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
     @EventHandler
     public void onServerSwitch(ServerSwitchEvent event) {
         teamHandler.init(event.getPlayer());
+        if(event.getPlayer().getServer().getInfo().getName().equalsIgnoreCase("ptown")) {
+            CVTabList.getInstanceFor(event.getPlayer().getUniqueId()).sendRealNames();
+        } else if(event.getFrom() != null && event.getFrom().getName().equalsIgnoreCase("ptown")) {
+            CVTabList.getInstanceFor(event.getPlayer().getUniqueId()).sendFakeNames();
+        }
     }
 
     @EventHandler
