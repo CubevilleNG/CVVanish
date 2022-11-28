@@ -52,6 +52,8 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
     public TeamManager teamManager;
     public TeamHandler teamHandler;
     public PlayerDataManager playerDataManager;
+
+    public List<String> teamEnabledServers;
     
     @Override
     public void onEnable() {
@@ -84,6 +86,13 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         actionBarNotifier.start();
 
         instance = this;
+
+        teamEnabledServers = new ArrayList<>();
+        teamEnabledServers.add("cv7wargames");
+    }
+
+    public List<String> getTeamEnabledServers() {
+        return this.teamEnabledServers;
     }
 
     public PlayerDataManager getPDM() {
@@ -155,11 +164,24 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
 
     @EventHandler
     public void onServerSwitch(ServerSwitchEvent event) {
-        teamHandler.init(event.getPlayer());
-        if(event.getPlayer().getServer().getInfo().getName().equalsIgnoreCase("ptown")) {
-            CVTabList.getInstanceFor(event.getPlayer().getUniqueId()).sendRealNames();
-        } else if(event.getFrom() != null && event.getFrom().getName().equalsIgnoreCase("ptown")) {
-            CVTabList.getInstanceFor(event.getPlayer().getUniqueId()).sendFakeNames();
+        ProxiedPlayer p = event.getPlayer();
+        teamHandler.init(p);
+        if(teamEnabledServers.contains(p.getServer().getInfo().getName().toLowerCase())) {
+            CVTabList.getInstanceFor(p.getUniqueId()).sendRealNamesToPlayer();
+            for(UUID uuid : connectedPlayers) {
+                ProxiedPlayer player = ProxyServer.getInstance().getPlayer(uuid);
+                if(teamEnabledServers.contains(player.getServer().getInfo().getName().toLowerCase())) {
+                    CVTabList.getInstanceFor(player.getUniqueId()).sendRealNameToPlayer(p.getUniqueId());
+                }
+            }
+        } else if(event.getFrom() != null && teamEnabledServers.contains(event.getFrom().getName().toLowerCase())) {
+            CVTabList.getInstanceFor(event.getPlayer().getUniqueId()).sendFakeNamesToPlayer();
+            for(UUID uuid : connectedPlayers) {
+                ProxiedPlayer player = ProxyServer.getInstance().getPlayer(uuid);
+                if(teamEnabledServers.contains(player.getServer().getInfo().getName().toLowerCase())) {
+                    CVTabList.getInstanceFor(player.getUniqueId()).sendFakeNameToPlayer(p.getUniqueId());
+                }
+            }
         }
     }
 

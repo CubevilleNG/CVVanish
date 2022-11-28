@@ -73,8 +73,8 @@ public class CVTabList extends TabList
 
     public void showPlayer(UUID uuid) {
         if(playerAddPackets.get(uuid) != null) {
-            if(!(player.getServer().getInfo().getName().equalsIgnoreCase("ptown") &&
-                    ProxyServer.getInstance().getPlayer(uuid).getServer().getInfo().getName().equalsIgnoreCase("ptown"))) {
+            if(!(plugin.getTeamEnabledServers().contains(player.getServer().getInfo().getName().toLowerCase()) &&
+                    plugin.getTeamEnabledServers().contains(ProxyServer.getInstance().getPlayer(uuid).getServer().getInfo().getName().toLowerCase()))) {
                 playerAddPacketsLock.lock();
                 try {
                     sendSingleItemPacket(PlayerListItem.Action.ADD_PLAYER, playerAddPackets.get(uuid));
@@ -90,9 +90,9 @@ public class CVTabList extends TabList
         }
     }
 
-    public void sendRealNames() {
+    public void sendRealNamesToPlayer() {
         for(ProxiedPlayer p : ProxyServer.getInstance().getPlayers()) {
-            if(p.getServer().getInfo().getName().equalsIgnoreCase("ptown")) {
+            if(plugin.getTeamEnabledServers().contains(p.getServer().getInfo().getName().toLowerCase())) {
                 if(teamHandler.canSenderSeePlayerState(player.getUniqueId(), p.getUniqueId()) && plugin.getConnectedPlayers().contains(p.getUniqueId())) {
                     PlayerListItem.Item item = createUuidItem(p.getUniqueId());
                     sendSingleItemPacket(PlayerListItem.Action.REMOVE_PLAYER, item);
@@ -103,13 +103,31 @@ public class CVTabList extends TabList
         }
     }
 
-    public void sendFakeNames() {
+    public void sendFakeNamesToPlayer() {
         for(ProxiedPlayer p : ProxyServer.getInstance().getPlayers()) {
-            if(teamHandler.canSenderSeePlayerState(player.getUniqueId(), p.getUniqueId()) && plugin.getConnectedPlayers().contains(p.getUniqueId())) {
+            if(teamHandler.canSenderSeePlayerState(player.getUniqueId(), p.getUniqueId())) {
                 PlayerListItem.Item item = createUuidItem(p.getUniqueId());
                 sendSingleItemPacket(PlayerListItem.Action.REMOVE_PLAYER, item);
                 sendSingleItemPacket(PlayerListItem.Action.ADD_PLAYER, playerAddPackets.get(p.getUniqueId()));
             }
+        }
+    }
+
+    public void sendRealNameToPlayer(UUID uuid) {
+        if(teamHandler.canSenderSeePlayerState(player.getUniqueId(), uuid)) {
+            PlayerListItem.Item item = createUuidItem(uuid);
+            sendSingleItemPacket(PlayerListItem.Action.REMOVE_PLAYER, item);
+            item.setUsername(ProxyServer.getInstance().getPlayer(uuid).getName());
+            sendSingleItemPacket(PlayerListItem.Action.ADD_PLAYER, item);
+        }
+    }
+
+    public void sendFakeNameToPlayer(UUID uuid) {
+        if(teamHandler.canSenderSeePlayerState(player.getUniqueId(), uuid)) {
+            PlayerListItem.Item item = createUuidItem(uuid);
+            sendSingleItemPacket(PlayerListItem.Action.REMOVE_PLAYER, item);
+            item.setUsername(ProxyServer.getInstance().getPlayer(uuid).getName());
+            sendSingleItemPacket(PlayerListItem.Action.ADD_PLAYER, playerAddPackets.get(uuid));
         }
     }
 
@@ -159,17 +177,7 @@ public class CVTabList extends TabList
                                 String fakeName = teamManager.getFakeName(item.getUuid());
                                 if(fakeName == null) {
                                     System.out.println("fake name was null! Cannot set username. User should relog");
-                                } /*else if(player.getServer().getInfo().getName().equalsIgnoreCase("ptown") &&
-                                ProxyServer.getInstance().getPlayer(item.getUuid()) != null &&
-                                ProxyServer.getInstance().getPlayer(item.getUuid()).getServer().getInfo().getName().equalsIgnoreCase("ptown")) {
-                                    System.out.println(player.getName() + " is on ptown server. Not setting a fakename");
-                                    playerAddPackets.put(item.getUuid(), item);
-
-                                    playerAddPacketsLock.unlock();
-                                    lck = false;
-
-                                    plugin.addPacketAvailable(item.getUuid());
-                                }*/ else {
+                                } else {
                                     item.setUsername(fakeName);
                                     playerAddPackets.put(item.getUuid(), item);
 
