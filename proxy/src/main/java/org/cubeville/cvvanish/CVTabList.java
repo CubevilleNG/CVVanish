@@ -93,7 +93,7 @@ public class CVTabList extends TabList
     public void sendRealNamesToPlayer() {
         for(ProxiedPlayer p : ProxyServer.getInstance().getPlayers()) {
             if(plugin.getTeamEnabledServers().contains(p.getServer().getInfo().getName().toLowerCase())) {
-                if(teamHandler.canSenderSeePlayerState(player.getUniqueId(), p.getUniqueId()) && plugin.getConnectedPlayers().contains(p.getUniqueId())) {
+                if(!plugin.isPlayerUnlisted(p.getUniqueId()) || teamHandler.canSenderSeePlayerState(player.getUniqueId(), p.getUniqueId())) {
                     PlayerListItem.Item item = createUuidItem(p.getUniqueId());
                     sendSingleItemPacket(PlayerListItem.Action.REMOVE_PLAYER, item);
                     item.setUsername(p.getName());
@@ -105,7 +105,7 @@ public class CVTabList extends TabList
 
     public void sendFakeNamesToPlayer() {
         for(ProxiedPlayer p : ProxyServer.getInstance().getPlayers()) {
-            if(teamHandler.canSenderSeePlayerState(player.getUniqueId(), p.getUniqueId())) {
+            if(!plugin.isPlayerUnlisted(p.getUniqueId()) || teamHandler.canSenderSeePlayerState(player.getUniqueId(), p.getUniqueId())) {
                 PlayerListItem.Item item = createUuidItem(p.getUniqueId());
                 sendSingleItemPacket(PlayerListItem.Action.REMOVE_PLAYER, item);
                 sendSingleItemPacket(PlayerListItem.Action.ADD_PLAYER, playerAddPackets.get(p.getUniqueId()));
@@ -114,7 +114,7 @@ public class CVTabList extends TabList
     }
 
     public void sendRealNameToPlayer(UUID uuid) {
-        if(teamHandler.canSenderSeePlayerState(player.getUniqueId(), uuid)) {
+        if(!plugin.isPlayerUnlisted(uuid) || teamHandler.canSenderSeePlayerState(player.getUniqueId(), uuid)) {
             PlayerListItem.Item item = createUuidItem(uuid);
             sendSingleItemPacket(PlayerListItem.Action.REMOVE_PLAYER, item);
             item.setUsername(ProxyServer.getInstance().getPlayer(uuid).getName());
@@ -123,7 +123,7 @@ public class CVTabList extends TabList
     }
 
     public void sendFakeNameToPlayer(UUID uuid) {
-        if(teamHandler.canSenderSeePlayerState(player.getUniqueId(), uuid)) {
+        if(!plugin.isPlayerUnlisted(uuid) || teamHandler.canSenderSeePlayerState(player.getUniqueId(), uuid)) {
             PlayerListItem.Item item = createUuidItem(uuid);
             sendSingleItemPacket(PlayerListItem.Action.REMOVE_PLAYER, item);
             item.setUsername(ProxyServer.getInstance().getPlayer(uuid).getName());
