@@ -1,8 +1,11 @@
 package org.cubeville.cvvanish.teams;
 
+import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.score.Team;
+import net.md_5.bungee.chat.ComponentSerializer;
 import org.cubeville.cvvanish.CVVanish;
 
 import java.util.*;
@@ -88,7 +91,7 @@ public class TeamManager {
         team.setCollisionRule("always");
         team.setFriendlyFire((byte) 0);
         team.setColor(15);
-        team.setPrefix("§" + color + plugin.getPDM().getPlayerVisibleName(uuid));
+        team.setPrefix(color + plugin.getPDM().getPlayerVisibleName(uuid));
         team.setSuffix("");
         String fakeName;
         if(this.fakeNames.containsKey(uuid)) {
