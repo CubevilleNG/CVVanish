@@ -122,8 +122,8 @@ public class TeamHandler {
                         //System.out.println("sending normal packet of " + p.getName() + " to " + player.getName());
                     }
                     player.unsafe().sendPacket(newTeam);
-                } else if(p.hasPermission("cvvanish.prefix.helper")){
-                    if(!helperOrHigher(player)) {
+                } else if(p.hasPermission("cvvanish.prefix.helper") && !modOrHigher(p)){
+                    if(!player.hasPermission("cvvanish.prefix.helper") && !modOrHigher(player)) {
                         color = "#FFFFFF";
                         newTeam.setName("0" + newTeam.getName().substring(1));
                     }
@@ -172,8 +172,8 @@ public class TeamHandler {
                         //System.out.println("sending normal packet of " + player.getName() + " to " + p.getName());
                         //System.out.println("normal packet prefix is " + newTeam.getPrefix());
                     }
-                } else if(player.hasPermission("cvvanish.prefix.helper")) {
-                    if(!helperOrHigher(p)) {
+                } else if(player.hasPermission("cvvanish.prefix.helper") && !modOrHigher(player)) {
+                    if(!p.hasPermission("cvvanish.prefix.helper") && !modOrHigher(p)) {
                         color = "#FFFFFF";
                         newTeam.setName("0" + newTeam.getName().substring(1));
                     }
@@ -342,9 +342,8 @@ public class TeamHandler {
         }
     }
 
-    public boolean helperOrHigher(ProxiedPlayer player) {
-        return player.hasPermission("cvvanish.prefix.helper") ||
-                player.hasPermission("cvvanish.prefix.retired") ||
+    public boolean modOrHigher(ProxiedPlayer player) {
+        return player.hasPermission("cvvanish.prefix.retired") ||
                 player.hasPermission("cvvanish.prefix.mod") ||
                 player.hasPermission("cvvanish.prefix.smod") ||
                 player.hasPermission("cvvanish.prefix.a") ||
