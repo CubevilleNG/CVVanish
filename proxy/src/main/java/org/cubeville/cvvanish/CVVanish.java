@@ -15,6 +15,7 @@ import net.md_5.bungee.api.event.ServerSwitchEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
+import net.md_5.bungee.api.score.Team;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.YamlConfiguration;
@@ -48,16 +49,17 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
     private static CVVanish instance;
     public static CVVanish getInstance() { return instance; }
 
-    private PlayerDataManager playerDataManager;
-
     public TeamManager teamManager;
     public TeamHandler teamHandler;
+    public PlayerDataManager playerDataManager;
+
+    public List<String> teamEnabledServers;
     
     @Override
     public void onEnable() {
         PluginManager pm = getProxy().getPluginManager();
         pm.registerCommand(this, new VCommand(this));
-        teamManager = new TeamManager();
+        teamManager = new TeamManager(this);
         teamHandler = new TeamHandler(this, teamManager);
         pm.registerCommand(this, new VReloadCommand(teamHandler));
         pm.registerListener(this, this);
@@ -65,6 +67,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         UserConnection.setTabListFactory(new CVTabListFactory());
         CVTabList.setPlugin(this);
         CVTabList.setTeamManager(teamManager);
+        CVTabList.setTeamHandler(teamHandler);
 
         ipc = (CVIPC) pm.getPlugin("CVIPC");
         ipc.registerInterface("vanish", this);
@@ -83,6 +86,30 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         actionBarNotifier.start();
 
         instance = this;
+
+        teamEnabledServers = new ArrayList<>();
+        teamEnabledServers.add("cv7wargames");
+    }
+
+    public List<String> getTeamEnabledServers() {
+        return this.teamEnabledServers;
+    }
+
+    public PlayerDataManager getPDM() {
+        return this.playerDataManager;
+    }
+
+    public void initPDM() {
+        if(this.playerDataManager == null) {
+            System.out.println("PDM was null...attempting to get instance");
+            try {
+                this.playerDataManager = PlayerDataManager.getInstance();
+                System.out.println("PDM instance successfully retrieved");
+            } catch(Exception e) {
+                e.printStackTrace();
+                System.out.println("Getting PDM instance failed");
+            }
+        }
     }
 
     public String getPlayerVisibleName(UUID uuid) {
@@ -124,20 +151,38 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
 
         if(player.hasPermission("cvvanish.default.interactdisabled"))
             interactDisabledPlayers.add(uuid);
+    }
 
-        // show the players already on the server to the new player
+    public void showExistingPlayers(UUID uuid) {
         for(UUID connectedPlayer: connectedPlayers) {
-            if(connectedPlayer.equals(event.getPlayer().getUniqueId()) == false &&
-               (unlistedPlayers.contains(connectedPlayer) == false ||
-                event.getPlayer().hasPermission("cvvanish.override") == true)) {
-                CVTabList.getInstanceFor(event.getPlayer().getUniqueId()).showPlayer(connectedPlayer);
+            if(!connectedPlayer.equals(uuid) &&
+                    (!unlistedPlayers.contains(connectedPlayer) || teamHandler.canSenderSeePlayerState(uuid, connectedPlayer))) {
+                CVTabList.getInstanceFor(uuid).showPlayer(connectedPlayer);
             }
         }
     }
 
     @EventHandler
     public void onServerSwitch(ServerSwitchEvent event) {
-        teamHandler.init(event.getPlayer());
+        ProxiedPlayer p = event.getPlayer();
+        teamHandler.init(p);
+        if(teamEnabledServers.contains(p.getServer().getInfo().getName().toLowerCase())) {
+            CVTabList.getInstanceFor(p.getUniqueId()).sendRealNamesToPlayer();
+            for(UUID uuid : connectedPlayers) {
+                ProxiedPlayer player = ProxyServer.getInstance().getPlayer(uuid);
+                if(teamEnabledServers.contains(player.getServer().getInfo().getName().toLowerCase())) {
+                    CVTabList.getInstanceFor(player.getUniqueId()).sendRealNameToPlayer(p.getUniqueId());
+                }
+            }
+        } else if(event.getFrom() != null && teamEnabledServers.contains(event.getFrom().getName().toLowerCase())) {
+            CVTabList.getInstanceFor(event.getPlayer().getUniqueId()).sendFakeNamesToPlayer();
+            for(UUID uuid : connectedPlayers) {
+                ProxiedPlayer player = ProxyServer.getInstance().getPlayer(uuid);
+                if(teamEnabledServers.contains(player.getServer().getInfo().getName().toLowerCase())) {
+                    CVTabList.getInstanceFor(player.getUniqueId()).sendFakeNameToPlayer(p.getUniqueId());
+                }
+            }
+        }
     }
 
     @EventHandler
@@ -149,8 +194,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         if(unlisted) unlistedPlayers.remove(uuid);
         invisiblePlayers.remove(uuid);
         for(UUID targetPlayer: connectedPlayers) {
-            if(unlisted == false ||
-               hasPermission(targetPlayer, "cvvanish.override")) {
+            if(!unlisted || teamHandler.canSenderSeePlayerState(targetPlayer, uuid)) {
                 CVTabList.getInstanceFor(targetPlayer).hidePlayer(uuid);
             }
         }
@@ -161,6 +205,10 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         nightvisionEnabledPlayers.remove(uuid);
         pickupDisabledPlayers.remove(uuid);
         interactDisabledPlayers.remove(uuid);
+        Team team = teamManager.getPlayerTeam(event.getPlayer().getUniqueId());
+        if(team != null) {
+            teamHandler.sendRemovePacketToServer(teamHandler.getTeamPacket(team), unlisted, event.getPlayer().getUniqueId());
+        }
     }
 
     public void updatePlayer(UUID uuid) {
@@ -172,9 +220,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         //       be better to have the original packets forwarded. (Current workaround: The mc vanish plugin sends an additional player spawn packet after a few seconds)
         boolean unlisted = unlistedPlayers.contains(uuid);
         for(UUID targetPlayer: connectedPlayers) {
-            if(hasPermission(targetPlayer, "cvvanish.override") ||
-               unlisted == false ||
-               targetPlayer.equals(uuid)) {
+            if(teamHandler.canSenderSeePlayerState(targetPlayer, uuid) || !unlisted || targetPlayer.equals(uuid)) {
                 CVTabList.getInstanceFor(targetPlayer).showPlayer(uuid);
             }
         }
@@ -183,9 +229,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
     public void sendUpdatedPacket(UUID uuid) {
         boolean unlisted = unlistedPlayers.contains(uuid);
         for(UUID targetPlayer: connectedPlayers) {
-            if(hasPermission(targetPlayer, "cvvanish.override") ||
-               unlisted == false ||
-               targetPlayer.equals(uuid)) {
+            if(teamHandler.canSenderSeePlayerState(targetPlayer, uuid) || !unlisted || targetPlayer.equals(uuid)) {
                 CVTabList.getInstanceFor(targetPlayer).hidePlayer(uuid);
                 CVTabList.getInstanceFor(targetPlayer).showPlayer(uuid);
             }
@@ -270,8 +314,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
             else
                 unlistedPlayers.remove(uuid);
             for(UUID targetPlayer: connectedPlayers) {
-                if(targetPlayer.equals(uuid) == false &&
-                   hasPermission(targetPlayer, "cvvanish.override") == false) {
+                if(!targetPlayer.equals(uuid) && !teamHandler.canSenderSeePlayerState(targetPlayer, uuid)) {
                     if(unlisted)
                         CVTabList.getInstanceFor(targetPlayer).hidePlayer(uuid);
                     else

@@ -3,5 +3,5 @@ main: org.cubeville.cvvanish.CVVanish
 author: FrediW
 version: 0.1
 api-version: 1.16
-depend: [CVIPC]
+depend: [CVIPC,ProtocolLib]
 softdepend: [OpenInv]

@@ -1,8 +1,12 @@
 package org.cubeville.cvvanish.teams;
 
+import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.score.Team;
+import net.md_5.bungee.chat.ComponentSerializer;
+import org.cubeville.cvvanish.CVVanish;
 
 import java.util.*;
 
@@ -13,9 +17,12 @@ public class TeamManager {
     public HashMap<UUID, String> fakeNames;
     public HashMap<String, Team> allTeams;
 
-    public TeamManager() {
+    public CVVanish plugin;
+
+    public TeamManager(CVVanish plugin) {
         this.fakeNames = new HashMap<>();
         this.allTeams = new HashMap<>();
+        this.plugin = plugin;
     }
 
     private boolean isFakeNameInUse(String s) {
@@ -84,9 +91,14 @@ public class TeamManager {
         team.setCollisionRule("always");
         team.setFriendlyFire((byte) 0);
         team.setColor(15);
-        team.setPrefix("§" + color + p.getName());
+        team.setPrefix(color + plugin.getPDM().getPlayerVisibleName(uuid));
         team.setSuffix("");
-        String fakeName = addFakeName(uuid);
+        String fakeName;
+        if(this.fakeNames.containsKey(uuid)) {
+            fakeName = this.fakeNames.get(uuid);
+        } else {
+            fakeName = addFakeName(uuid);
+        }
         team.setPlayers(Collections.singleton(fakeName));
         this.allTeams.put(fakeName, team);
         return team;
@@ -96,7 +108,14 @@ public class TeamManager {
         Team team = getPlayerTeam(uuid);
         if(team == null) return null;
         this.allTeams.remove(this.fakeNames.get(uuid));
-        this.fakeNames.remove(uuid);
         return team;
+    }
+
+    public Team changePlayerTeamName(UUID uuid, String newName) {
+        if(getPlayerTeam(uuid) == null) return null;
+        Team newTeam = this.allTeams.get(this.fakeNames.get(uuid));
+        newTeam.setPrefix(newName);
+        this.allTeams.put(this.fakeNames.get(uuid), newTeam);
+        return getPlayerTeam(uuid);
     }
 }

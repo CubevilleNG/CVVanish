@@ -6,11 +6,13 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.ConcurrentHashMap;
 
 import net.md_5.bungee.UserConnection;
+import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.connection.LoginResult;
 import net.md_5.bungee.protocol.Property;
 import net.md_5.bungee.protocol.packet.PlayerListItem;
 import net.md_5.bungee.tab.TabList;
+import org.cubeville.cvvanish.teams.TeamHandler;
 import org.cubeville.cvvanish.teams.TeamManager;
 
 public class CVTabList extends TabList
@@ -28,6 +30,11 @@ public class CVTabList extends TabList
     private static TeamManager teamManager;
     public static void setTeamManager(TeamManager teamManagers) {
         teamManager = teamManagers;
+    }
+
+    private static TeamHandler teamHandler;
+    public static void setTeamHandler(TeamHandler teamHandlers) {
+        teamHandler = teamHandlers;
     }
 
     private static ConcurrentHashMap<UUID, CVTabList> instances = new ConcurrentHashMap<>();
@@ -59,16 +66,68 @@ public class CVTabList extends TabList
     }
 
     public void hidePlayer(UUID uuid) {
-        sendSingleItemPacket(PlayerListItem.Action.REMOVE_PLAYER, createUuidItem(uuid));
+        if(!teamHandler.canSenderSeePlayerState(player.getUniqueId(), uuid) || !plugin.getConnectedPlayers().contains(uuid)) {
+            sendSingleItemPacket(PlayerListItem.Action.REMOVE_PLAYER, createUuidItem(uuid));
+        }
     }
 
     public void showPlayer(UUID uuid) {
-        playerAddPacketsLock.lock();
-        try {
-            sendSingleItemPacket(PlayerListItem.Action.ADD_PLAYER, playerAddPackets.get(uuid));
+        if(playerAddPackets.get(uuid) != null) {
+            if(!(plugin.getTeamEnabledServers().contains(player.getServer().getInfo().getName().toLowerCase()) &&
+                    plugin.getTeamEnabledServers().contains(ProxyServer.getInstance().getPlayer(uuid).getServer().getInfo().getName().toLowerCase()))) {
+                playerAddPacketsLock.lock();
+                try {
+                    sendSingleItemPacket(PlayerListItem.Action.ADD_PLAYER, playerAddPackets.get(uuid));
+                }
+                finally {
+                    playerAddPacketsLock.unlock();
+                }
+            } else {
+                PlayerListItem.Item item = createUuidItem(uuid);
+                item.setUsername(ProxyServer.getInstance().getPlayer(uuid).getName());
+                sendSingleItemPacket(PlayerListItem.Action.ADD_PLAYER, item);
+            }
         }
-        finally {
-            playerAddPacketsLock.unlock();
+    }
+
+    public void sendRealNamesToPlayer() {
+        for(ProxiedPlayer p : ProxyServer.getInstance().getPlayers()) {
+            if(plugin.getTeamEnabledServers().contains(p.getServer().getInfo().getName().toLowerCase())) {
+                if(!plugin.isPlayerUnlisted(p.getUniqueId()) || teamHandler.canSenderSeePlayerState(player.getUniqueId(), p.getUniqueId())) {
+                    PlayerListItem.Item item = createUuidItem(p.getUniqueId());
+                    sendSingleItemPacket(PlayerListItem.Action.REMOVE_PLAYER, item);
+                    item.setUsername(p.getName());
+                    sendSingleItemPacket(PlayerListItem.Action.ADD_PLAYER, item);
+                }
+            }
+        }
+    }
+
+    public void sendFakeNamesToPlayer() {
+        for(ProxiedPlayer p : ProxyServer.getInstance().getPlayers()) {
+            if(!plugin.isPlayerUnlisted(p.getUniqueId()) || teamHandler.canSenderSeePlayerState(player.getUniqueId(), p.getUniqueId())) {
+                PlayerListItem.Item item = createUuidItem(p.getUniqueId());
+                sendSingleItemPacket(PlayerListItem.Action.REMOVE_PLAYER, item);
+                sendSingleItemPacket(PlayerListItem.Action.ADD_PLAYER, playerAddPackets.get(p.getUniqueId()));
+            }
+        }
+    }
+
+    public void sendRealNameToPlayer(UUID uuid) {
+        if(!plugin.isPlayerUnlisted(uuid) || teamHandler.canSenderSeePlayerState(player.getUniqueId(), uuid)) {
+            PlayerListItem.Item item = createUuidItem(uuid);
+            sendSingleItemPacket(PlayerListItem.Action.REMOVE_PLAYER, item);
+            item.setUsername(ProxyServer.getInstance().getPlayer(uuid).getName());
+            sendSingleItemPacket(PlayerListItem.Action.ADD_PLAYER, item);
+        }
+    }
+
+    public void sendFakeNameToPlayer(UUID uuid) {
+        if(!plugin.isPlayerUnlisted(uuid) || teamHandler.canSenderSeePlayerState(player.getUniqueId(), uuid)) {
+            PlayerListItem.Item item = createUuidItem(uuid);
+            sendSingleItemPacket(PlayerListItem.Action.REMOVE_PLAYER, item);
+            item.setUsername(ProxyServer.getInstance().getPlayer(uuid).getName());
+            sendSingleItemPacket(PlayerListItem.Action.ADD_PLAYER, playerAddPackets.get(uuid));
         }
     }
 
@@ -77,7 +136,7 @@ public class CVTabList extends TabList
         super( player );
     }
 
-    private void sendSingleItemPacket(PlayerListItem.Action action, PlayerListItem.Item item) {
+    public void sendSingleItemPacket(PlayerListItem.Action action, PlayerListItem.Item item) {
         PlayerListItem playerListItem = new PlayerListItem();
         playerListItem.setAction(action);
         PlayerListItem.Item items[] = new PlayerListItem.Item[1];
@@ -86,7 +145,7 @@ public class CVTabList extends TabList
         player.unsafe().sendPacket(playerListItem);
     }
 
-    private PlayerListItem.Item createUuidItem(UUID uuid) {
+    public PlayerListItem.Item createUuidItem(UUID uuid) {
         PlayerListItem.Item ret = new PlayerListItem.Item();
         ret.setUuid(uuid);
         return ret;
@@ -117,17 +176,16 @@ public class CVTabList extends TabList
 
                                 String fakeName = teamManager.getFakeName(item.getUuid());
                                 if(fakeName == null) {
-                                    System.out.println("fake name was null! Cannot set username");
+                                    System.out.println("fake name was null! Cannot set username. User should relog");
                                 } else {
                                     item.setUsername(fakeName);
-                                }
-                                
-                                playerAddPackets.put(item.getUuid(), item);
+                                    playerAddPackets.put(item.getUuid(), item);
 
-                                playerAddPacketsLock.unlock();
-                                lck = false;
-                                
-                                plugin.addPacketAvailable(item.getUuid());
+                                    playerAddPacketsLock.unlock();
+                                    lck = false;
+
+                                    plugin.addPacketAvailable(item.getUuid());
+                                }
                             }
                         }
                         finally {
@@ -152,27 +210,6 @@ public class CVTabList extends TabList
             playerListItem.setItems(items);
             player.unsafe().sendPacket(playerListItem);
         }
-    }
-
-    public void anotherPacket(ProxiedPlayer player) {
-        PlayerListItem pli = new PlayerListItem();
-        pli.setAction(PlayerListItem.Action.ADD_PLAYER);
-        PlayerListItem.Item item = new PlayerListItem.Item();
-        item.setPing(player.getPing());
-        item.setUsername(player.getName());
-        item.setGamemode(1);
-        item.setUuid(player.getUniqueId());
-        item.setProperties(new Property[0]);
-        LoginResult loginResult = ((UserConnection) player).
-                getPendingConnection().getLoginProfile();
-        if (loginResult != null) {
-            Property[] props = loginResult.getProperties();
-            item.setProperties(props);
-        } else {
-            item.setProperties(new Property[0]);
-        }
-        pli.setItems(new PlayerListItem.Item[]{item});
-        this.player.unsafe().sendPacket(pli);
     }
 
     @Override

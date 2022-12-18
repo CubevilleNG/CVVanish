@@ -1,9 +1,18 @@
 package org.cubeville.cvvanish;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import com.comphenix.protocol.PacketType;
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.ProtocolManager;
+import com.comphenix.protocol.events.ListenerPriority;
+import com.comphenix.protocol.events.PacketAdapter;
+import com.comphenix.protocol.events.PacketContainer;
+import com.comphenix.protocol.events.PacketEvent;
+import com.comphenix.protocol.wrappers.WrappedWatchableObject;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -16,15 +25,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityPickupItemEvent;
-import org.bukkit.event.entity.EntityPotionEffectEvent;
-import org.bukkit.event.entity.CreatureSpawnEvent;
-import org.bukkit.event.entity.EntityTargetEvent;
-import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPickupArrowEvent;
+import org.bukkit.event.world.GenericGameEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -40,6 +45,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
 
     private CVIPC ipc;
     private IOpenInv openInv;
+    private ProtocolManager protocolManager;
     
     private Set<UUID> invertedVisibility = new HashSet<>();
     private Set<UUID> pickupInvertedPlayers = new HashSet<>();
@@ -61,6 +67,9 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
 	if(openInv == null) {
 	    System.out.println("OpenInv not loaded!");
 	}
+
+        protocolManager = ProtocolLibrary.getProtocolManager();
+        petListener();
 	
         interactDisallowedMaterials.add(Material.ACACIA_PRESSURE_PLATE);
         interactDisallowedMaterials.add(Material.BIRCH_PRESSURE_PLATE);
@@ -93,6 +102,25 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
 
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         return false;
+    }
+
+    public void petListener() {
+        protocolManager.addPacketListener(new PacketAdapter(this, ListenerPriority.NORMAL, PacketType.Play.Server.ENTITY_METADATA) {
+            @Override
+            public void onPacketSending(PacketEvent event) {
+                if(event.getPacketType() == PacketType.Play.Server.ENTITY_METADATA) {
+                    for(WrappedWatchableObject o : event.getPacket().getWatchableCollectionModifier().read(0)) {
+                        if(o.getWatcherObject().getIndex() == 18) {
+                            //System.out.println(o);
+                            if(o.getValue().toString().contains("[") && o.getValue().toString().contains("]")) {
+                                o.setValue(Optional.empty());
+                            }
+                            //System.out.println(o);
+                        }
+                    }
+                }
+            }
+        });
     }
 
     public void process(String channel, String message) {
@@ -324,6 +352,15 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
                 player.addPotionEffect(n, true);
                 event.setCancelled(true);
             }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onSculkSensorActivate(GenericGameEvent event) {
+        if(event.getEntity() == null) return;
+        if(!(event.getEntity() instanceof Player)) return;
+        if(isPlayerInteractDisabled((Player) event.getEntity())) {
+            event.setCancelled(true);
         }
     }
     

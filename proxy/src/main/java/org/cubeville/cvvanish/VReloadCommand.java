@@ -22,9 +22,6 @@ public class VReloadCommand extends Command {
             return;
         }
         teamHandler.updateServerTeamConfig();
-        for(ProxiedPlayer p : ProxyServer.getInstance().getPlayers()) {
-            teamHandler.sendAllCreatePacketsToPlayer(p);
-        }
-        commandSender.sendMessage(ChatColor.GREEN + "Proxy Team Config Reloaded");
+        commandSender.sendMessage(ChatColor.GREEN + "Proxy Vanish Config and Teams Reloaded");
     }
 }
