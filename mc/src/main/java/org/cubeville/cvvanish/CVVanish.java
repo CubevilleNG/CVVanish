@@ -29,6 +29,7 @@ import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPickupArrowEvent;
+import org.bukkit.event.world.GenericGameEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -351,6 +352,15 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
                 player.addPotionEffect(n, true);
                 event.setCancelled(true);
             }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onSculkSensorActivate(GenericGameEvent event) {
+        if(event.getEntity() == null) return;
+        if(!(event.getEntity() instanceof Player)) return;
+        if(isPlayerInteractDisabled((Player) event.getEntity())) {
+            event.setCancelled(true);
         }
     }
     
