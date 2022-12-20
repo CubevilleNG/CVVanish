@@ -11,6 +11,8 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.connection.LoginResult;
 import net.md_5.bungee.protocol.Property;
 import net.md_5.bungee.protocol.packet.PlayerListItem;
+import net.md_5.bungee.protocol.packet.PlayerListItemRemove;
+import net.md_5.bungee.protocol.packet.PlayerListItemUpdate;
 import net.md_5.bungee.tab.TabList;
 import org.cubeville.cvvanish.teams.TeamHandler;
 import org.cubeville.cvvanish.teams.TeamManager;
@@ -210,6 +212,16 @@ public class CVTabList extends TabList
             playerListItem.setItems(items);
             player.unsafe().sendPacket(playerListItem);
         }
+    }
+
+    @Override
+    public void onUpdate(PlayerListItemRemove playerListItemRemove) {
+
+    }
+
+    @Override
+    public void onUpdate(PlayerListItemUpdate playerListItemUpdate) {
+
     }
 
     @Override
