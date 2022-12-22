@@ -139,12 +139,31 @@ public class CVTabList extends TabList
     }
 
     public void sendSingleItemPacket(PlayerListItem.Action action, PlayerListItem.Item item) {
-        PlayerListItem playerListItem = new PlayerListItem();
-        playerListItem.setAction(action);
-        PlayerListItem.Item items[] = new PlayerListItem.Item[1];
-        items[0] = item;
-        playerListItem.setItems(items);
-        player.unsafe().sendPacket(playerListItem);
+        if(player.getPendingConnection().getVersion() < 759) {
+            PlayerListItem playerListItem = new PlayerListItem();
+            playerListItem.setAction(action);
+            PlayerListItem.Item items[] = new PlayerListItem.Item[1];
+            items[0] = item;
+            playerListItem.setItems(items);
+            player.unsafe().sendPacket(playerListItem);
+        } else {
+            if(action == PlayerListItem.Action.ADD_PLAYER) {
+                PlayerListItemUpdate pliUpdate = new PlayerListItemUpdate();
+                PlayerListItem.Item items[] = new PlayerListItem.Item[1];
+                items[0] = item;
+                pliUpdate.setItems(items);
+                EnumSet<PlayerListItemUpdate.Action> actions = EnumSet.noneOf(PlayerListItemUpdate.Action.class);
+                actions.add(PlayerListItemUpdate.Action.ADD_PLAYER);
+                pliUpdate.setActions(actions);
+                player.unsafe().sendPacket(pliUpdate);
+            } else if(action == PlayerListItem.Action.REMOVE_PLAYER) {
+                PlayerListItemRemove pliRemove = new PlayerListItemRemove();
+                UUID uuids[] = new UUID[1];
+                uuids[0] = item.getUuid();
+                pliRemove.setUuids(uuids);
+                player.unsafe().sendPacket(pliRemove);
+            }
+        }
     }
 
     public PlayerListItem.Item createUuidItem(UUID uuid) {
@@ -154,8 +173,8 @@ public class CVTabList extends TabList
     }
     
     @Override
-    public void onUpdate(PlayerListItem playerListItem)
-    {
+    public void onUpdate(PlayerListItem playerListItem) {
+        System.out.println("playerListItem firing!");
         if(playerListItem.getAction() == PlayerListItem.Action.UPDATE_LATENCY) return; // TODO ... well, or not, kinda more convenient
         //         playerListItem.getAction() == PlayerListItem.Action.UPDATE_GAMEMODE) return;
 
@@ -216,12 +235,100 @@ public class CVTabList extends TabList
 
     @Override
     public void onUpdate(PlayerListItemRemove playerListItemRemove) {
+        System.out.println("playerListItemRemove firing!");
+        player.unsafe().sendPacket(playerListItemRemove);
 
+        /*List<PlayerListItem.Item> updatedItemList = new ArrayList<>();
+        for(UUID uuid : playerListItemRemove.getUuids()) {
+            boolean isPlayer = false;
+            synchronized(playerList) { if(playerList.contains(uuid)) isPlayer = true; }
+            if(!isPlayer) { // NPC
+                updatedItemList.add(item);
+            }
+            else { // Player
+                if(plugin.isConnectedPlayer(uuid)) {
+                    playerAddPacketsLock.lock();
+                    boolean lck = true;
+                    try {
+                        if(!playerAddPackets.containsKey(item.getUuid())) {
+
+                            item.setGamemode(1);
+
+                            String fakeName = teamManager.getFakeName(item.getUuid());
+                            if(fakeName == null) {
+                                System.out.println("fake name was null! Cannot set username. User should relog");
+                            } else {
+                                item.setUsername(fakeName);
+                                playerAddPackets.put(item.getUuid(), item);
+
+                                playerAddPacketsLock.unlock();
+                                lck = false;
+
+                                plugin.addPacketAvailable(item.getUuid());
+                            }
+                        }
+                    }
+                    finally {
+                        if(lck) playerAddPacketsLock.unlock();
+                    }
+                }
+            }
+        }
+
+        if(updatedItemList.size() > 0) {
+            PlayerListItem.Item items[] = new PlayerListItem.Item[updatedItemList.size()];
+            updatedItemList.toArray(items);
+            playerListItemUpdate.setItems(items);
+            player.unsafe().sendPacket(playerListItemUpdate);
+        }*/
     }
 
     @Override
     public void onUpdate(PlayerListItemUpdate playerListItemUpdate) {
+        System.out.println("playerListItemUpdate firing!");
+        List<PlayerListItem.Item> updatedItemList = new ArrayList<>();
+        for(PlayerListItem.Item item : playerListItemUpdate.getItems()) {
+            boolean isPlayer = false;
+            synchronized(playerList) { if(playerList.contains(item.getUuid())) isPlayer = true; }
+            if(!isPlayer) { // NPC
+                updatedItemList.add(item);
+            }
+            else { // Player
+                    if(plugin.isConnectedPlayer(item.getUuid())) {
+                        playerAddPacketsLock.lock();
+                        boolean lck = true;
+                        try {
+                            if(!playerAddPackets.containsKey(item.getUuid())) {
 
+                                item.setGamemode(1);
+
+                                String fakeName = teamManager.getFakeName(item.getUuid());
+                                if(fakeName == null) {
+                                    System.out.println("fake name was null! Cannot set username. User should relog");
+                                } else {
+                                    item.setUsername(fakeName);
+                                    playerAddPackets.put(item.getUuid(), item);
+
+                                    playerAddPacketsLock.unlock();
+                                    lck = false;
+
+                                    plugin.addPacketAvailable(item.getUuid());
+                                }
+                            }
+                        }
+                        finally {
+                            if(lck) playerAddPacketsLock.unlock();
+                        }
+                }
+            }
+        }
+
+        if(updatedItemList.size() > 0) {
+            PlayerListItem.Item items[] = new PlayerListItem.Item[updatedItemList.size()];
+            updatedItemList.toArray(items);
+            playerListItemUpdate.setItems(items);
+            player.unsafe().sendPacket(playerListItemUpdate);
+        }
     }
 
     @Override

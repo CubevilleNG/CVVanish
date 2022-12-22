@@ -6,7 +6,7 @@
   
   <groupId>org.cubeville.proxy</groupId>
   <artifactId>CVVanish</artifactId>
-  <version>1.18</version>
+  <version>1.19</version>
 
   <dependencies>
     <dependency>
@@ -47,12 +47,12 @@
     </dependency>
   </dependencies>
 
-  <!-- <repositories> -->
-  <!--   <repository> -->
-  <!--     <id>bungeecord-repo</id> -->
-  <!--     <url>https://oss.sonatype.org/content/repositories/snapshots</url> -->
-  <!--   </repository> -->
-  <!-- </repositories> -->
+   <repositories>
+     <repository>
+       <id>bungeecord-repo</id>
+       <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+     </repository>
+   </repositories>
   
   <build>
     <plugins>
