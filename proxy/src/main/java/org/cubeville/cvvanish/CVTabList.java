@@ -5,6 +5,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.netty.handler.codec.EncoderException;
 import net.md_5.bungee.UserConnection;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
@@ -139,12 +140,32 @@ public class CVTabList extends TabList
     }
 
     public void sendSingleItemPacket(PlayerListItem.Action action, PlayerListItem.Item item) {
-        PlayerListItem playerListItem = new PlayerListItem();
-        playerListItem.setAction(action);
-        PlayerListItem.Item items[] = new PlayerListItem.Item[1];
-        items[0] = item;
-        playerListItem.setItems(items);
-        player.unsafe().sendPacket(playerListItem);
+        if(player.getPendingConnection().getVersion() <= 758) {
+            PlayerListItem playerListItem = new PlayerListItem();
+            playerListItem.setAction(action);
+            PlayerListItem.Item items[] = new PlayerListItem.Item[1];
+            items[0] = item;
+            playerListItem.setItems(items);
+            player.unsafe().sendPacket(playerListItem);
+        } else {
+            if(action.equals(PlayerListItem.Action.ADD_PLAYER)) {
+                PlayerListItemUpdate playerListItemUpdate = new PlayerListItemUpdate();
+                PlayerListItem.Item items[] = new PlayerListItem.Item[1];
+                if(item.getListed() == null) {
+                    item.setListed(true);
+                }
+                items[0] = item;
+                playerListItemUpdate.setItems(items);
+                playerListItemUpdate.setActions(EnumSet.of(PlayerListItemUpdate.Action.ADD_PLAYER, PlayerListItemUpdate.Action.UPDATE_LISTED));
+                player.unsafe().sendPacket(playerListItemUpdate);
+            } else if(action.equals(PlayerListItem.Action.REMOVE_PLAYER)) {
+                PlayerListItemRemove playerListItemRemove = new PlayerListItemRemove();
+                UUID uuids[] = new UUID[1];
+                uuids[0] = item.getUuid();
+                playerListItemRemove.setUuids(uuids);
+                player.unsafe().sendPacket(playerListItemRemove);
+            }
+        }
     }
 
     public PlayerListItem.Item createUuidItem(UUID uuid) {
@@ -210,7 +231,10 @@ public class CVTabList extends TabList
             PlayerListItem.Item items[] = new PlayerListItem.Item[updatedItemList.size()];
             updatedItemList.toArray(items);
             playerListItem.setItems(items);
-            player.unsafe().sendPacket(playerListItem);
+            for(PlayerListItem.Item item : playerListItem.getItems()) {
+                sendSingleItemPacket(playerListItem.getAction(), item);
+            }
+            //player.unsafe().sendPacket(playerListItem);
         }
     }
 
@@ -221,7 +245,45 @@ public class CVTabList extends TabList
 
     @Override
     public void onUpdate(PlayerListItemUpdate playerListItemUpdate) {
+        List<PlayerListItem.Item> updatedItemList = new ArrayList<>();
+            for(PlayerListItem.Item item : playerListItemUpdate.getItems()) {
+                boolean isPlayer = false;
+                synchronized(playerList) { if(playerList.contains(item.getUuid())) isPlayer = true; }
+                if(!isPlayer) { // NPC
+                    updatedItemList.add(item);
+                }
+                else { // Player
+                    if(plugin.isConnectedPlayer(item.getUuid())) {
+                        playerAddPacketsLock.lock();
+                        boolean lck = true;
+                        try {
+                            if(!playerAddPackets.containsKey(item.getUuid())) {
 
+                                item.setGamemode(1);
+
+                                String fakeName = teamManager.getFakeName(item.getUuid());
+                                if(fakeName == null) {
+                                    System.out.println("fake name was null! Cannot set username. User should relog");
+                                } else {
+                                    item.setUsername(fakeName);
+                                    playerAddPackets.put(item.getUuid(), item);
+
+                                    playerAddPacketsLock.unlock();
+                                    lck = false;
+
+                                    plugin.addPacketAvailable(item.getUuid());
+                                }
+                            }
+                        }
+                        finally {
+                            if(lck) playerAddPacketsLock.unlock();
+                        }
+                    }
+                    //else { TODO: How to handle this if at all?
+                    //    System.out.println("Ignoring add player packet cause plugin doesn't think it's a connected player.");
+                    //}
+                }
+            }
     }
 
     @Override
