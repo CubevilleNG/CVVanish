@@ -4,7 +4,7 @@
   <groupId>org.cubeville</groupId>
   <artifactId>CVVanish</artifactId>
   <packaging>jar</packaging>
-  <version>1.18</version>
+  <version>1.19</version>
   <name>CVVanish</name>
   <url>http://maven.apache.org</url>
   <properties>
@@ -15,7 +15,7 @@
     <dependency>
       <groupId>org.spigotmc</groupId>
       <artifactId>spigot</artifactId>
-      <version>1.18-R0.1-SNAPSHOT</version>
+      <version>1.19-R0.1-SNAPSHOT</version>
       <type>jar</type>
       <scope>compile</scope>
     </dependency>
@@ -35,7 +35,7 @@
     <dependency>
       <groupId>com.comphenix.protocol</groupId>
       <artifactId>ProtocolLib</artifactId>
-      <version>4.7.0</version>
+      <version>4.8.0</version>
       <scope>compile</scope>
     </dependency>
   </dependencies>

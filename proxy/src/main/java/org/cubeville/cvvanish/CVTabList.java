@@ -75,7 +75,7 @@ public class CVTabList extends TabList
     }
 
     public void showPlayer(UUID uuid) {
-        if(playerAddPackets.get(uuid) != null) {
+        if(playerAddPackets.get(uuid) != null && player.getServer() != null) {
             if(!(plugin.getTeamEnabledServers().contains(player.getServer().getInfo().getName().toLowerCase()) &&
                     plugin.getTeamEnabledServers().contains(ProxyServer.getInstance().getPlayer(uuid).getServer().getInfo().getName().toLowerCase()))) {
                 playerAddPacketsLock.lock();
@@ -198,9 +198,7 @@ public class CVTabList extends TabList
                                 item.setGamemode(1);
 
                                 String fakeName = teamManager.getFakeName(item.getUuid());
-                                if(fakeName == null) {
-                                    System.out.println("fake name was null! Cannot set username. User should relog");
-                                } else {
+                                if(fakeName != null) {
                                     item.setUsername(fakeName);
                                     playerAddPackets.put(item.getUuid(), item);
 
@@ -262,9 +260,7 @@ public class CVTabList extends TabList
                                 item.setGamemode(1);
 
                                 String fakeName = teamManager.getFakeName(item.getUuid());
-                                if(fakeName == null) {
-                                    System.out.println("fake name was null! Cannot set username. User should relog");
-                                } else {
+                                if(fakeName != null) {
                                     item.setUsername(fakeName);
                                     playerAddPackets.put(item.getUuid(), item);
 
