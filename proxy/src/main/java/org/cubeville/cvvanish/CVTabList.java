@@ -150,6 +150,7 @@ public class CVTabList extends TabList
         if(serverVersion <= 758) {
             PlayerListItem playerListItem = new PlayerListItem();
             playerListItem.setAction(action);
+            item.setPublicKey(null);
             PlayerListItem.Item items[] = new PlayerListItem.Item[1];
             items[0] = item;
             playerListItem.setItems(items);
@@ -161,6 +162,7 @@ public class CVTabList extends TabList
                 if(item.getListed() == null) {
                     item.setListed(true);
                 }
+                item.setPublicKey(null);
                 items[0] = item;
                 playerListItemUpdate.setItems(items);
                 playerListItemUpdate.setActions(EnumSet.of(PlayerListItemUpdate.Action.ADD_PLAYER, PlayerListItemUpdate.Action.UPDATE_LISTED));
@@ -168,6 +170,7 @@ public class CVTabList extends TabList
             } else if(action.equals(PlayerListItem.Action.REMOVE_PLAYER)) {
                 PlayerListItemRemove playerListItemRemove = new PlayerListItemRemove();
                 UUID uuids[] = new UUID[1];
+                item.setPublicKey(null);
                 uuids[0] = item.getUuid();
                 playerListItemRemove.setUuids(uuids);
                 player.unsafe().sendPacket(playerListItemRemove);
