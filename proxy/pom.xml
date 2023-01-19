@@ -45,14 +45,23 @@
       <version>1.18</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>com.viaversion</groupId>
+      <artifactId>viaversion-api</artifactId>
+      <version>LATEST</version>
+    </dependency>
   </dependencies>
 
-  <!-- <repositories> -->
-  <!--   <repository> -->
-  <!--     <id>bungeecord-repo</id> -->
-  <!--     <url>https://oss.sonatype.org/content/repositories/snapshots</url> -->
-  <!--   </repository> -->
-  <!-- </repositories> -->
+   <repositories>
+     <!--<repository>
+       <id>bungeecord-repo</id>
+       <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+     </repository> -->
+     <repository>
+       <id>viaversion-repo</id>
+       <url>https://repo.viaversion.com</url>
+     </repository>
+   </repositories>
   
   <build>
     <plugins>
