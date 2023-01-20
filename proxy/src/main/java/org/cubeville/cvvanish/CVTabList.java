@@ -145,12 +145,22 @@ public class CVTabList extends TabList
 
     public void sendSingleItemPacket(PlayerListItem.Action action, PlayerListItem.Item item) {
         int serverVersion = Via.proxyPlatform().protocolDetectorService().serverProtocolVersion(player.getServer().getInfo().getName());
-        int playerVersion = Via.getAPI().getPlayerVersion(player);
-        System.out.println(player.getName() + " is on a server with version " + serverVersion + " and on a client with version of " + playerVersion);
+        //int playerVersion = Via.getAPI().getPlayerVersion(player);
+        //System.out.println(player.getName() + " is on a server with version " + serverVersion + " and on a client with version of " + playerVersion);
         if(serverVersion <= 758) {
             PlayerListItem playerListItem = new PlayerListItem();
             playerListItem.setAction(action);
             item.setPublicKey(null);
+            if(!item.getUuid().equals(player.getUniqueId())) {
+                item.setGamemode(1);
+            } else if(item.getGamemode() != null) {
+
+            } else if(playerAddPackets.get(item.getUuid()) != null) {
+                item.setGamemode(playerAddPackets.get(item.getUuid()).getGamemode());
+            } else {
+                item.setGamemode(1);
+            }
+            item.setPing(0);
             PlayerListItem.Item items[] = new PlayerListItem.Item[1];
             items[0] = item;
             playerListItem.setItems(items);
@@ -163,6 +173,16 @@ public class CVTabList extends TabList
                     item.setListed(true);
                 }
                 item.setPublicKey(null);
+                if(!item.getUuid().equals(player.getUniqueId())) {
+                    item.setGamemode(1);
+                } else if(item.getGamemode() != null) {
+
+                } else if(playerAddPackets.get(item.getUuid()) != null) {
+                    item.setGamemode(playerAddPackets.get(item.getUuid()).getGamemode());
+                } else {
+                    item.setGamemode(1);
+                }
+                item.setPing(0);
                 items[0] = item;
                 playerListItemUpdate.setItems(items);
                 playerListItemUpdate.setActions(EnumSet.of(PlayerListItemUpdate.Action.ADD_PLAYER, PlayerListItemUpdate.Action.UPDATE_LISTED));
@@ -174,6 +194,29 @@ public class CVTabList extends TabList
                 uuids[0] = item.getUuid();
                 playerListItemRemove.setUuids(uuids);
                 player.unsafe().sendPacket(playerListItemRemove);
+            } else if(action.equals(PlayerListItem.Action.UPDATE_GAMEMODE)) {
+                if(item.getUuid().equals(player.getUniqueId())) {
+                    PlayerListItemUpdate playerListItemUpdate = new PlayerListItemUpdate();
+                    PlayerListItem.Item items[] = new PlayerListItem.Item[1];
+                    if(item.getListed() == null) {
+                        item.setListed(true);
+                    }
+                    item.setPublicKey(null);
+                    if(!item.getUuid().equals(player.getUniqueId())) {
+                        item.setGamemode(1);
+                    } else if(item.getGamemode() != null) {
+
+                    } else if(playerAddPackets.get(item.getUuid()) != null) {
+                        item.setGamemode(playerAddPackets.get(item.getUuid()).getGamemode());
+                    } else {
+                        item.setGamemode(1);
+                    }
+                    item.setPing(0);
+                    items[0] = item;
+                    playerListItemUpdate.setItems(items);
+                    playerListItemUpdate.setActions(EnumSet.of(PlayerListItemUpdate.Action.UPDATE_GAMEMODE));
+                    player.unsafe().sendPacket(playerListItemUpdate);
+                }
             }
         }
     }
@@ -204,8 +247,8 @@ public class CVTabList extends TabList
                         boolean lck = true;
                         try {
                             if(!playerAddPackets.containsKey(item.getUuid())) {
-                                
-                                item.setGamemode(1);
+
+                                //item.setGamemode(1);
 
                                 String fakeName = teamManager.getFakeName(item.getUuid());
                                 if(fakeName != null) {
@@ -254,42 +297,58 @@ public class CVTabList extends TabList
     @Override
     public void onUpdate(PlayerListItemUpdate playerListItemUpdate) {
         List<PlayerListItem.Item> updatedItemList = new ArrayList<>();
-            for(PlayerListItem.Item item : playerListItemUpdate.getItems()) {
-                boolean isPlayer = false;
-                synchronized(playerList) { if(playerList.contains(item.getUuid())) isPlayer = true; }
-                if(!isPlayer) { // NPC
-                    updatedItemList.add(item);
-                }
-                else { // Player
-                    if(plugin.isConnectedPlayer(item.getUuid())) {
+        for(PlayerListItem.Item item : playerListItemUpdate.getItems()) {
+            boolean isPlayer = false;
+            synchronized(playerList) { if(playerList.contains(item.getUuid())) isPlayer = true; }
+            if(!isPlayer) { // NPC
+                updatedItemList.add(item);
+            }
+            else { // Player
+                if(plugin.isConnectedPlayer(item.getUuid())) {
+                    if(playerListItemUpdate.getActions().contains(PlayerListItemUpdate.Action.ADD_PLAYER)) {
                         playerAddPacketsLock.lock();
                         boolean lck = true;
                         try {
-                            if(!playerAddPackets.containsKey(item.getUuid())) {
+                            //if(!playerAddPackets.containsKey(item.getUuid())) {
 
-                                item.setGamemode(1);
+                            //item.setGamemode(1);
 
-                                String fakeName = teamManager.getFakeName(item.getUuid());
-                                if(fakeName != null) {
-                                    item.setUsername(fakeName);
-                                    playerAddPackets.put(item.getUuid(), item);
+                            String fakeName = teamManager.getFakeName(item.getUuid());
+                            if (fakeName != null) {
+                                item.setUsername(fakeName);
+                                playerAddPackets.put(item.getUuid(), item);
 
-                                    playerAddPacketsLock.unlock();
-                                    lck = false;
+                                playerAddPacketsLock.unlock();
+                                lck = false;
 
-                                    plugin.addPacketAvailable(item.getUuid());
-                                }
+                                plugin.addPacketAvailable(item.getUuid());
                             }
+                                //}
+                        } finally {
+                            if (lck) playerAddPacketsLock.unlock();
                         }
-                        finally {
-                            if(lck) playerAddPacketsLock.unlock();
+                    } else if(playerListItemUpdate.getActions().contains(PlayerListItemUpdate.Action.UPDATE_GAMEMODE) && playerListItemUpdate.getActions().size() == 1) {
+                        if(item.getUuid().equals(getUniqueId())) {
+                            updatedItemList.add(item);
                         }
                     }
+                }
                     //else { TODO: How to handle this if at all?
                     //    System.out.println("Ignoring add player packet cause plugin doesn't think it's a connected player.");
                     //}
+            }
+        }
+        if(updatedItemList.size() > 0) {
+            PlayerListItem.Item items[] = new PlayerListItem.Item[updatedItemList.size()];
+            updatedItemList.toArray(items);
+            playerListItemUpdate.setItems(items);
+            for(PlayerListItem.Item item : playerListItemUpdate.getItems()) {
+                if(playerListItemUpdate.getActions().iterator().next().equals(PlayerListItemUpdate.Action.UPDATE_GAMEMODE)) {
+                    sendSingleItemPacket(PlayerListItem.Action.UPDATE_GAMEMODE, item);
                 }
             }
+            //player.unsafe().sendPacket(playerListItem);
+        }
     }
 
     @Override
