@@ -283,6 +283,7 @@ public class CVTabList extends TabList
             updatedItemList.toArray(items);
             playerListItem.setItems(items);
             for(PlayerListItem.Item item : playerListItem.getItems()) {
+                //System.out.println(playerListItem.getAction());
                 sendSingleItemPacket(playerListItem.getAction(), item);
             }
             //player.unsafe().sendPacket(playerListItem);
@@ -343,8 +344,11 @@ public class CVTabList extends TabList
             updatedItemList.toArray(items);
             playerListItemUpdate.setItems(items);
             for(PlayerListItem.Item item : playerListItemUpdate.getItems()) {
+                //System.out.println(playerListItemUpdate.getActions().iterator().next());
                 if(playerListItemUpdate.getActions().iterator().next().equals(PlayerListItemUpdate.Action.UPDATE_GAMEMODE)) {
                     sendSingleItemPacket(PlayerListItem.Action.UPDATE_GAMEMODE, item);
+                } else if(playerListItemUpdate.getActions().iterator().next().equals(PlayerListItemUpdate.Action.ADD_PLAYER)) {
+                    sendSingleItemPacket(PlayerListItem.Action.ADD_PLAYER, item);
                 }
             }
             //player.unsafe().sendPacket(playerListItem);
