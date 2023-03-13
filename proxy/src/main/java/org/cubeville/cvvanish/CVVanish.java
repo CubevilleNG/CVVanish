@@ -30,6 +30,7 @@ import org.cubeville.cvvanish.teams.TeamManager;
 
 public class CVVanish extends Plugin implements IPCInterface, Listener {
 
+    private HashMap<UUID, Long> loginTime = new HashMap<>();
     private Set<UUID> connectedPlayers = new CopyOnWriteArraySet<>();
 
     private Set<UUID> invisiblePlayers = new CopyOnWriteArraySet<>();
@@ -89,6 +90,11 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
 
         teamEnabledServers = new ArrayList<>();
         teamEnabledServers.add("cv7wargames");
+        teamEnabledServers.add("cv7wargames2");
+    }
+
+    public TeamHandler getTeamHandler() {
+        return this.teamHandler;
     }
 
     public List<String> getTeamEnabledServers() {
@@ -151,6 +157,8 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
 
         if(player.hasPermission("cvvanish.default.interactdisabled"))
             interactDisabledPlayers.add(uuid);
+
+        loginTime.put(uuid, System.currentTimeMillis() / 1000L);
     }
 
     public void showExistingPlayers(UUID uuid) {
@@ -183,6 +191,9 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
                 }
             }
         }
+
+        //TODO this ensures the player has been connected for less than 10 seconds
+        if((System.currentTimeMillis() / 1000L) - loginTime.get(event.getPlayer().getUniqueId()) < 10) addPacketAvailable(event.getPlayer().getUniqueId());
     }
 
     @EventHandler

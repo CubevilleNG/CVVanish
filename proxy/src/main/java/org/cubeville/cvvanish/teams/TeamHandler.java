@@ -53,10 +53,13 @@ public class TeamHandler {
         } catch(IOException e) {
             System.out.println("Could not load configuration");
         }
+        refreshEntireTab();
+    }
+
+    public void refreshEntireTab() {
         for(ProxiedPlayer p : ProxyServer.getInstance().getPlayers()) {
             init(p);
         }
-
     }
 
     public void init(ProxiedPlayer player) {

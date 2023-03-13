@@ -1,9 +1,6 @@
 package org.cubeville.cvvanish;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
@@ -12,15 +9,15 @@ import com.comphenix.protocol.events.ListenerPriority;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
+import com.comphenix.protocol.wrappers.WrappedDataValue;
+import com.comphenix.protocol.wrappers.WrappedDataWatcher;
 import com.comphenix.protocol.wrappers.WrappedWatchableObject;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Phantom;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -108,17 +105,43 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
         protocolManager.addPacketListener(new PacketAdapter(this, ListenerPriority.NORMAL, PacketType.Play.Server.ENTITY_METADATA) {
             @Override
             public void onPacketSending(PacketEvent event) {
-                if(event.getPacketType() == PacketType.Play.Server.ENTITY_METADATA) {
-                    for(WrappedWatchableObject o : event.getPacket().getWatchableCollectionModifier().read(0)) {
-                        if(o.getWatcherObject().getIndex() == 18) {
-                            //System.out.println(o);
-                            if(o.getValue().toString().contains("[") && o.getValue().toString().contains("]")) {
-                                o.setValue(Optional.empty());
-                            }
-                            //System.out.println(o);
-                        }
-                    }
+                if(event.isCancelled()) return;
+                if(event.getPacketType() != PacketType.Play.Server.ENTITY_METADATA) return;
+
+                final PacketContainer packet = event.getPacket();
+                final Entity entity = packet.getEntityModifier(event).read(0);
+
+                if(entity == null) return;
+                if(!(entity instanceof Tameable)) return;
+
+                final WrappedDataWatcher dataWatcher = WrappedDataWatcher.getEntityWatcher(entity).deepClone();
+
+                final WrappedDataWatcher.Serializer uuidSerializer = WrappedDataWatcher.Registry.getUUIDSerializer(true);
+
+                final WrappedDataWatcher.WrappedDataWatcherObject optUUIDFieldWatcher = new WrappedDataWatcher.WrappedDataWatcherObject(18, uuidSerializer);
+
+                final Optional<Object> optUUIDField = Optional.empty();
+
+                dataWatcher.setObject(optUUIDFieldWatcher, optUUIDField);
+
+                final List<WrappedDataValue> wrappedDataValueList = new ArrayList<>();
+
+                for(final WrappedWatchableObject entry : dataWatcher.getWatchableObjects()) {
+                    if(entry == null) continue;
+
+                    final WrappedDataWatcher.WrappedDataWatcherObject watcherObject = entry.getWatcherObject();
+                    wrappedDataValueList.add(
+                            new WrappedDataValue(
+                                    watcherObject.getIndex(),
+                                    watcherObject.getSerializer(),
+                                    entry.getRawValue()
+                            )
+                    );
                 }
+
+                packet.getDataValueCollectionModifier().write(0, wrappedDataValueList);
+
+                event.setPacket(packet);
             }
         });
     }
