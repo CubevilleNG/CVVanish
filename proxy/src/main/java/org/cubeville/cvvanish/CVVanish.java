@@ -93,6 +93,10 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         teamEnabledServers.add("cv7wargames2");
     }
 
+    public TeamHandler getTeamHandler() {
+        return this.teamHandler;
+    }
+
     public List<String> getTeamEnabledServers() {
         return this.teamEnabledServers;
     }
