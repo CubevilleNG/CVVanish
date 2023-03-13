@@ -292,7 +292,23 @@ public class CVTabList extends TabList
 
     @Override
     public void onUpdate(PlayerListItemRemove playerListItemRemove) {
-
+        List<PlayerListItemRemove> updatedItemList = new ArrayList<>();
+        for(UUID uuid : playerListItemRemove.getUuids()) {
+            if(!playerList.contains(uuid)) {
+                PlayerListItemRemove item = new PlayerListItemRemove();
+                UUID[] uuid1 = new UUID[1];
+                uuid1[0] = uuid;
+                item.setUuids(uuid1);
+                updatedItemList.add(item);
+            }
+        }
+        if(updatedItemList.size() > 0) {
+            for(PlayerListItemRemove item : updatedItemList) {
+                PlayerListItem.Item item1 = new PlayerListItem.Item();
+                item1.setUuid(item.getUuids()[0]);
+                sendSingleItemPacket(PlayerListItem.Action.REMOVE_PLAYER, item1);
+            }
+        }
     }
 
     @Override
