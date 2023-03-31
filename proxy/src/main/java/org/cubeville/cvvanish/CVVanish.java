@@ -40,6 +40,8 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
     private Set<UUID> interactDisabledPlayers = new CopyOnWriteArraySet<>();
     private Set<UUID> nightvisionEnabledPlayers = new CopyOnWriteArraySet<>();
 
+    private Set<UUID> godPlayers = new CopyOnWriteArraySet<>();
+
     private Set<UUID> actionBarPlayers = new CopyOnWriteArraySet<>();
     
     private List<List<String>> tabListPrefixes;
@@ -80,7 +82,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
             tabListPrefixes = (List<List<String>>) config.get("prefixes");
         }
         catch(IOException e) {
-            System.out.println("Could not load configuration");
+            System.out.println("CVVanish could not load configuration");
         }
 
         actionBarNotifier = new ActionBarNotifier(this);
@@ -213,6 +215,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         CVTabList.getInstanceFor(event.getPlayer().getUniqueId()).removeInstance();
 
         ipc.broadcastMessage("vanish|dcreset:" + uuid);
+        godPlayers.remove(uuid);
         nightvisionEnabledPlayers.remove(uuid);
         pickupDisabledPlayers.remove(uuid);
         interactDisabledPlayers.remove(uuid);
@@ -306,6 +309,17 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         teamHandler.sendVanishPacketToServer(teamHandler.getTeamPacket(teamManager.getPlayerTeam(uuid)), ProxyServer.getInstance().getPlayer(uuid));
     }
 
+    public void setPlayerHidden(UUID uuid) {
+        if(hasPermission(uuid, "cvvanish.disable.autopickupdisable") == false)
+            setPlayerPickupDisabledStatus(uuid, false);
+        if(hasPermission(uuid, "cvvanish.disable.autointeractdisable") == false)
+            setPlayerInteractDisabledStatus(uuid, false);
+        setPlayerNightvisionEnabledStatus(uuid, false);
+        setPlayerUnlistedStatus(uuid, true);
+        setPlayerInvisibilityStatus(uuid, false);
+        teamHandler.sendHidePacketToServer(teamHandler.getTeamPacket(teamManager.getPlayerTeam(uuid)), ProxyServer.getInstance().getPlayer(uuid));
+    }
+
     public void switchPlayerVisibility(UUID uuid) {
         if(invisiblePlayers.contains(uuid)) {
             setPlayerVisible(uuid);
@@ -374,6 +388,16 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
             sendPlayerNightvisionEnabledStatusIPCMessage(uuid, null);
         }
     }
+
+    public void setPlayerGodStatus(UUID uuid, boolean disabled) {
+        if(disabled != godPlayers.contains(uuid)) {
+            if(disabled)
+                godPlayers.add(uuid);
+            else
+                godPlayers.remove(uuid);
+            sendPlayerGodStatusIPCMessage(uuid, null);
+        }
+    }
     
     private void sendPlayerVisibilityInvertedStatusIPCMessage(UUID uuid, String server) {
         boolean inverted = invisiblePlayers.contains(uuid);
@@ -395,6 +419,10 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
 
     private void sendPlayerNightvisionEnabledStatusIPCMessage(UUID uuid, String server) {
         sendPlayerStatusIPCMessage(uuid, nightvisionEnabledPlayers.contains(uuid) ? "non" : "noff", server);
+    }
+
+    private void sendPlayerGodStatusIPCMessage(UUID uuid, String server) {
+        sendPlayerStatusIPCMessage(uuid, godPlayers.contains(uuid) ? "god" : "ungod", server);
     }
     
     private void sendPlayerStatusIPCMessage(UUID uuid, String prefix, String server) {
@@ -427,6 +455,10 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
 
     public boolean isPlayerInteractDisabled(UUID uuid) {
         return interactDisabledPlayers.contains(uuid);
+    }
+
+    public boolean isPlayerGod(UUID uuid) {
+        return godPlayers.contains(uuid);
     }
 
     public boolean isConnectedPlayer(UUID uuid) {

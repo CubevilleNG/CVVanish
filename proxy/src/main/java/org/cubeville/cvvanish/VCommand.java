@@ -40,6 +40,10 @@ public class VCommand extends Command
                 plugin.setPlayerVanished(uuid);
                 cc = true;
             }
+            else if(args[0].equals("hide")) {
+                plugin.setPlayerHidden(uuid);
+                cc = true;
+            }
             else if(args[0].equals("ioff")) {
                 plugin.setPlayerInteractDisabledStatus(uuid, true);
                 cc = true;
@@ -59,6 +63,12 @@ public class VCommand extends Command
             else if(args[0].equals("noff") || args[0].equals("non")) {
                 if(player.hasPermission("cvvanish.use.nightvision"))
                     plugin.setPlayerNightvisionEnabledStatus(uuid, args[0].equals("non"));
+                else
+                    player.sendMessage("§cNo permission.");
+            }
+            else if(args[0].equals("ungod") || args[0].equals("god")) {
+                if(player.hasPermission("cvvanish.use.god"))
+                    plugin.setPlayerGodStatus(uuid, args[0].equals("god"));
                 else
                     player.sendMessage("§cNo permission.");
             }
@@ -112,7 +122,9 @@ public class VCommand extends Command
             msg += " Pickup is ";
             msg += plugin.isPlayerItemPickupDisabled(uuid) ? "§edisabled" : "§eenabled";
             msg += "§a. Interact is ";
-            msg += plugin.isPlayerInteractDisabled(uuid) ? "§edisabled." : "§eenabled.";
+            msg += plugin.isPlayerInteractDisabled(uuid) ? "§edisabled§a." : "§eenabled§a.";
+            msg += " God is ";
+            msg += plugin.isPlayerGod(uuid) ? "§eenabled§a." : plugin.isPlayerInvisible(uuid) ? "§eactive§a." : "§edisabled§a.";
             player.sendMessage(msg);
         }
         

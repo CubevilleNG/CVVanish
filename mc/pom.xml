@@ -14,15 +14,15 @@
   <dependencies>
     <dependency>
       <groupId>org.spigotmc</groupId>
-      <artifactId>spigot</artifactId>
-      <version>1.19-R0.1-SNAPSHOT</version>
+      <artifactId>spigot-api</artifactId>
+      <version>1.19.4-R0.1-SNAPSHOT</version>
       <type>jar</type>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.cubeville</groupId>
       <artifactId>CVIPC</artifactId>
-      <version>1.18</version>
+      <version>0.1</version>
       <type>jar</type>
       <scope>compile</scope>
     </dependency>
@@ -42,7 +42,7 @@
   <repositories>
     <repository>
       <id>dmulloy2-repo</id>
-      <url>https://repo.dmulloy2.net/repository/public/</url>
+      <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots</url>
     </repository>
   </repositories>
   <build>
