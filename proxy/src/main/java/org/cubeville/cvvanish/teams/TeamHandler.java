@@ -327,6 +327,8 @@ public class TeamHandler {
             ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
             //p.unsafe().sendPacket(newTeam);
             if(canSenderSeePlayerState(p.getUniqueId(), player.getUniqueId())) {
+                team.setMode((byte) 1);
+                p.unsafe().sendPacket(newTeam);
                 String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(team.getPrefix()));
                 String color = oldPrefix.substring(oldPrefix.indexOf("#"), oldPrefix.indexOf("#") + 7);
                 oldPrefix = oldPrefix.substring(oldPrefix.indexOf("#") + 7);

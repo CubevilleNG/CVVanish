@@ -106,7 +106,38 @@ public class VCommand extends Command
                     }
                 }
                 else
-                    player.sendMessage("§cNo permission.");                
+                    player.sendMessage("§cNo permission.");
+            }
+            else if(args[0].equals("ungod") || args[0].equals("god")) {
+                if(player.hasPermission("cvvanish.use.godother")) {
+                    ProxiedPlayer p = ProxyServer.getInstance().getPlayer(args[1]);
+                    if (p == null) {
+                        player.sendMessage("§cInvalid player.");
+                        return;
+                    }
+                    UUID pu = p.getUniqueId();
+                    String message;
+                    if (args[0].equals("god")) {
+                        if (!plugin.isPlayerGod(pu)) {
+                            message = "§aApplied god to §e" + p.getName() + "§a.";
+                        }
+                        else {
+                            message = "§e" + p.getName() + " §aalready has god enabled.";
+                        }
+                    }
+                    else {
+                        if (plugin.isPlayerGod(pu)) {
+                            message = "§aRemoved god from §e" + p.getName() + "§a.";
+                        }
+                        else {
+                            message = "§e" + p.getName() + " §aalready has god disabled.";
+                        }
+                    }
+                    plugin.setPlayerGodStatus(pu, args[0].equals("god"));
+                    player.sendMessage(message);
+                }
+                else
+                    player.sendMessage("§cNo permission.");
             }
             else {
                 player.sendMessage("§cUnknown command!");
