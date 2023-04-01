@@ -71,6 +71,7 @@ public class VCommand extends Command
                     plugin.setPlayerGodStatus(uuid, args[0].equals("god"));
                 else
                     player.sendMessage("§cNo permission.");
+                cc = true;
             }
             else if(args[0].equals("help")) {
                 player.sendMessage("§c§lVanish Plugin Commands");
