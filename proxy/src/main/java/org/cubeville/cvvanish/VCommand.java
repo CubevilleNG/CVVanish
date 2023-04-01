@@ -77,9 +77,11 @@ public class VCommand extends Command
                 player.sendMessage("§6/v§r - §6§oToggles the player between visible, and the state they log on with (smod/admin: invisible, pickup/interact off | sa: vanish, pickup/interact off)");
                 player.sendMessage("§6/van§r - §6§oPlayer becomes invisible, and will not show on tab.");
                 player.sendMessage("§6/inv§r - §6§oPlayer becomes invisible, but will remain on tab.");
+                player.sendMessage("§6/hide§r - §6§oPlayer becomes visible, but will not remain on tab.");
                 player.sendMessage("§6/vis§r - §6§oPlayer becomes visible, and remains on tab.");
                 player.sendMessage("§6/poff /pon§r - §6§oThis will toggle whether you pick items up or not.");
                 player.sendMessage("§6/ioff /ion§r - §6§oThis will toggle whether you interact with pressure plates and tripwires.");
+                player.sendMessage("§6/god /ungod§r - §6§oThis will toggle invincibility. Being invisible automatically also makes you invincible.");
                 if(player.hasPermission("cvvanish.use.nightvision")) player.sendMessage("§6/noff /non§r - §6§oThis will toggle nightvision.");
                 player.sendMessage("§6/vfj§r - §6§oSend fake join message, go into /vis mode");
                 player.sendMessage("§6/ifj§r - §6§oSend fake join message, go into /inv mode");

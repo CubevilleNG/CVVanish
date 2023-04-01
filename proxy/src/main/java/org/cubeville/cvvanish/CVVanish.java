@@ -321,7 +321,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
     }
 
     public void switchPlayerVisibility(UUID uuid) {
-        if(invisiblePlayers.contains(uuid)) {
+        if(invisiblePlayers.contains(uuid) || unlistedPlayers.contains(uuid)) {
             setPlayerVisible(uuid);
         }
         else {

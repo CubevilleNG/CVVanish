@@ -318,7 +318,6 @@ public class TeamHandler {
     }
 
     public void sendHidePacketToServer(net.md_5.bungee.protocol.packet.Team team, ProxiedPlayer player) {
-        team.setMode((byte) 0);
         HashMap<String, String> serverConfig = this.serverTeamConfig.get(player.getServer().getInfo().getName());
         team.setCollisionRule(serverConfig.get("collision"));
         team.setNameTagVisibility(serverConfig.get("nametags"));
@@ -326,21 +325,16 @@ public class TeamHandler {
         for(UUID uuid : plugin.getConnectedPlayers()) {
             net.md_5.bungee.protocol.packet.Team newTeam = createNewTeamPacket(team);
             ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
-            p.unsafe().sendPacket(newTeam);
-            String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(team.getPrefix()));
-            String color = oldPrefix.substring(oldPrefix.indexOf("#"), oldPrefix.indexOf("#") + 7);
-            oldPrefix = oldPrefix.substring(oldPrefix.indexOf("#") + 7);
+            //p.unsafe().sendPacket(newTeam);
             if(canSenderSeePlayerState(p.getUniqueId(), player.getUniqueId())) {
-                newTeam.setMode((byte) 1);
-                p.unsafe().sendPacket(newTeam);
+                String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(team.getPrefix()));
+                String color = oldPrefix.substring(oldPrefix.indexOf("#"), oldPrefix.indexOf("#") + 7);
+                oldPrefix = oldPrefix.substring(oldPrefix.indexOf("#") + 7);
                 newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + "§m" + oldPrefix)));
+                newTeam.setMode((byte) 0);
+                p.unsafe().sendPacket(newTeam);
                 //System.out.println("sending strikethrough packet of " + player.getName() + " to " + p.getName());
-            } else {
-                newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + oldPrefix)));
-                //System.out.println("sending normal packet of " + player.getName() + " to " + p.getName());
             }
-            newTeam.setMode((byte) 0);
-            p.unsafe().sendPacket(newTeam);
         }
     }
 
