@@ -63,7 +63,7 @@ public class TeamHandler {
     }
 
     public void init(ProxiedPlayer player) {
-        plugin.initPDM();
+        //plugin.initPDM();
         String [] rank = getRank(player);
         String currentTeam = teamManager.getPlayerTeam(player.getUniqueId()) == null ? null : teamManager.getPlayerTeam(player.getUniqueId()).getName();
         String newTeam = rank[0] + plugin.getPDM().getPlayerVisibleName(player.getUniqueId());

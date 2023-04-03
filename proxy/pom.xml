@@ -41,8 +41,8 @@
     </dependency>
     <dependency>
       <groupId>org.cubeville.proxy</groupId>
-      <artifactId>CVChat</artifactId>
-      <version>1.18</version>
+      <artifactId>CVPlayerData</artifactId>
+      <version>1.19</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
