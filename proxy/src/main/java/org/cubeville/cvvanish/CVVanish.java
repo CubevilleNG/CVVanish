@@ -24,7 +24,7 @@ import net.md_5.bungee.event.EventHandler;
 import org.cubeville.cvipc.CVIPC;
 import org.cubeville.cvipc.IPCInterface;
 
-import org.cubeville.cvchat.playerdata.PlayerDataManager;
+import org.cubeville.cvplayerdata.playerdata.PlayerDataManager;
 import org.cubeville.cvvanish.teams.TeamHandler;
 import org.cubeville.cvvanish.teams.TeamManager;
 
@@ -91,6 +91,8 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         teamEnabledServers = new ArrayList<>();
         teamEnabledServers.add("cv7wargames");
         teamEnabledServers.add("cv7wargames2");
+
+        playerDataManager = PlayerDataManager.getInstance();
     }
 
     public TeamHandler getTeamHandler() {
@@ -105,7 +107,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         return this.playerDataManager;
     }
 
-    public void initPDM() {
+    /*public void initPDM() {
         if(this.playerDataManager == null) {
             System.out.println("PDM was null...attempting to get instance");
             try {
@@ -116,7 +118,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
                 System.out.println("Getting PDM instance failed");
             }
         }
-    }
+    }*/
 
     public String getPlayerVisibleName(UUID uuid) {
         //ProxiedPlayer player = ProxyServer.getInstance().getPlayer(uuid);
