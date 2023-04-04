@@ -40,10 +40,6 @@ public class VCommand extends Command
                 plugin.setPlayerVanished(uuid);
                 cc = true;
             }
-            else if(args[0].equals("hide")) {
-                plugin.setPlayerHidden(uuid);
-                cc = true;
-            }
             else if(args[0].equals("ioff")) {
                 plugin.setPlayerInteractDisabledStatus(uuid, true);
                 cc = true;
@@ -67,22 +63,22 @@ public class VCommand extends Command
                     player.sendMessage("§cNo permission.");
             }
             else if(args[0].equals("ungod") || args[0].equals("god")) {
-                if(player.hasPermission("cvvanish.use.god"))
+                if(player.hasPermission("cvvanish.use.god")) {
                     plugin.setPlayerGodStatus(uuid, args[0].equals("god"));
+                    cc = true;
+                }
                 else
                     player.sendMessage("§cNo permission.");
-                cc = true;
             }
             else if(args[0].equals("help")) {
                 player.sendMessage("§c§lVanish Plugin Commands");
                 player.sendMessage("§6/v§r - §6§oToggles the player between visible, and the state they log on with (smod/admin: invisible, pickup/interact off | sa: vanish, pickup/interact off)");
                 player.sendMessage("§6/van§r - §6§oPlayer becomes invisible, and will not show on tab.");
                 player.sendMessage("§6/inv§r - §6§oPlayer becomes invisible, but will remain on tab.");
-                player.sendMessage("§6/hide§r - §6§oPlayer becomes visible, but will not remain on tab.");
                 player.sendMessage("§6/vis§r - §6§oPlayer becomes visible, and remains on tab.");
                 player.sendMessage("§6/poff /pon§r - §6§oThis will toggle whether you pick items up or not.");
                 player.sendMessage("§6/ioff /ion§r - §6§oThis will toggle whether you interact with pressure plates and tripwires.");
-                player.sendMessage("§6/god /ungod§r - §6§oThis will toggle invincibility. Being invisible automatically also makes you invincible.");
+                if(player.hasPermission("cvvanish.use.god")) player.sendMessage("§6/god /ungod§r - §6§oThis will toggle invincibility. Being invisible automatically also makes you invincible.");
                 if(player.hasPermission("cvvanish.use.nightvision")) player.sendMessage("§6/noff /non§r - §6§oThis will toggle nightvision.");
                 player.sendMessage("§6/vfj§r - §6§oSend fake join message, go into /vis mode");
                 player.sendMessage("§6/ifj§r - §6§oSend fake join message, go into /inv mode");
@@ -158,7 +154,7 @@ public class VCommand extends Command
             msg += "§a. Interact is ";
             msg += plugin.isPlayerInteractDisabled(uuid) ? "§edisabled§a." : "§eenabled§a.";
             msg += " God is ";
-            msg += plugin.isPlayerGod(uuid) ? "§eenabled§a." : plugin.isPlayerInvisible(uuid) ? "§eactive§a." : "§edisabled§a.";
+            msg += plugin.isPlayerGod(uuid) ? "§eenabled§a." : plugin.isPlayerInvisible(uuid) ? "§eenabled§a." : "§edisabled§a.";
             player.sendMessage(msg);
         }
         

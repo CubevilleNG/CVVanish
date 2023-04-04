@@ -27,13 +27,11 @@ public class ActionBarNotifier implements Runnable
         for(UUID uuid: connectedPlayers) {
             if(plugin.isActionBarActive(uuid) == false) continue;
             String message = "";
-            if(!plugin.isPlayerListed(uuid) && plugin.isPlayerInvisible(uuid))
+            if(!plugin.isPlayerListed(uuid))
                 message = "Vanished. ";
-            else if(plugin.isPlayerInvisible(uuid) && plugin.isPlayerListed(uuid))
+            else if(plugin.isPlayerInvisible(uuid))
                 message = "Invisible. ";
-            else if (!plugin.isPlayerListed(uuid))
-                message = "Hidden. ";
-            if(plugin.isPlayerGod(uuid) && !plugin.isPlayerInvisible(uuid) && !ProxyServer.getInstance().getPlayer(uuid).hasPermission("cvvanish.disableactionbar.god"))
+            if(plugin.isPlayerGod(uuid) && !plugin.isPlayerInvisible(uuid) && ProxyServer.getInstance().getPlayer(uuid).hasPermission("cvvanish.actionbar.god"))
                 message += "God Enabled.";
             if(plugin.isPlayerItemPickupDisabled(uuid) && plugin.isPlayerInteractDisabled(uuid))
                 message += "PU, IA off.";

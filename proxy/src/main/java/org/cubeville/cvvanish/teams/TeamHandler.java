@@ -107,10 +107,10 @@ public class TeamHandler {
                 String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(newTeam.getPrefix()));
                 String color = oldPrefix.substring(oldPrefix.indexOf("#"), oldPrefix.indexOf("#") + 7);
                 oldPrefix = oldPrefix.substring(oldPrefix.indexOf("#") + 7);
-                if(plugin.isPlayerUnlisted(p.getUniqueId()) && plugin.isPlayerInvisible(p.getUniqueId())) {
+                if(plugin.isPlayerUnlisted(p.getUniqueId())) {
                     //System.out.println(p.getName() + " is unlisted");
                     if(canSenderSeePlayerState(player.getUniqueId(), p.getUniqueId())) {
-                        String newPrefix = ChatColor.of(color) + "§m§o" + oldPrefix;
+                        String newPrefix = ChatColor.of(color) + "§m" + oldPrefix;
                         newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
                         player.unsafe().sendPacket(newTeam);
                         //System.out.println("sending strikethrough packet of " + p.getName() + " to " + player.getName());
@@ -119,16 +119,6 @@ public class TeamHandler {
                     //System.out.println(p.getName() + " is invisible");
                     if(canSenderSeePlayerState(player.getUniqueId(), p.getUniqueId())) {
                         newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + "§o" + oldPrefix)));
-                        //System.out.println("sending italics packet of " + p.getName() + " to " + player.getName());
-                    } else {
-                        newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + oldPrefix)));
-                        //System.out.println("sending normal packet of " + p.getName() + " to " + player.getName());
-                    }
-                    player.unsafe().sendPacket(newTeam);
-                } else if(plugin.isPlayerUnlisted(p.getUniqueId())) {
-                    //System.out.println(p.getName() + " is invisible");
-                    if (canSenderSeePlayerState(player.getUniqueId(), p.getUniqueId())) {
-                        newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + "§m" + oldPrefix)));
                         //System.out.println("sending italics packet of " + p.getName() + " to " + player.getName());
                     } else {
                         newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + oldPrefix)));
@@ -306,29 +296,6 @@ public class TeamHandler {
             ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
             p.unsafe().sendPacket(newTeam);
             if(canSenderSeePlayerState(p.getUniqueId(), player.getUniqueId())) {
-                String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(team.getPrefix()));
-                String color = oldPrefix.substring(oldPrefix.indexOf("#"), oldPrefix.indexOf("#") + 7);
-                oldPrefix = oldPrefix.substring(oldPrefix.indexOf("#") + 7);
-                newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + "§m§o" + oldPrefix)));
-                newTeam.setMode((byte) 0);
-                p.unsafe().sendPacket(newTeam);
-                //System.out.println("sending strikethrough packet of " + player.getName() + " to " + p.getName());
-            }
-        }
-    }
-
-    public void sendHidePacketToServer(net.md_5.bungee.protocol.packet.Team team, ProxiedPlayer player) {
-        HashMap<String, String> serverConfig = this.serverTeamConfig.get(player.getServer().getInfo().getName());
-        team.setCollisionRule(serverConfig.get("collision"));
-        team.setNameTagVisibility(serverConfig.get("nametags"));
-        //System.out.println(player.getName() + " status just changed to unlisted");
-        for(UUID uuid : plugin.getConnectedPlayers()) {
-            net.md_5.bungee.protocol.packet.Team newTeam = createNewTeamPacket(team);
-            ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
-            //p.unsafe().sendPacket(newTeam);
-            if(canSenderSeePlayerState(p.getUniqueId(), player.getUniqueId())) {
-                team.setMode((byte) 1);
-                p.unsafe().sendPacket(newTeam);
                 String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(team.getPrefix()));
                 String color = oldPrefix.substring(oldPrefix.indexOf("#"), oldPrefix.indexOf("#") + 7);
                 oldPrefix = oldPrefix.substring(oldPrefix.indexOf("#") + 7);

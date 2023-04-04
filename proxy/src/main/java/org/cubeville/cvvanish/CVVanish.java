@@ -311,19 +311,8 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         teamHandler.sendVanishPacketToServer(teamHandler.getTeamPacket(teamManager.getPlayerTeam(uuid)), ProxyServer.getInstance().getPlayer(uuid));
     }
 
-    public void setPlayerHidden(UUID uuid) {
-        if(hasPermission(uuid, "cvvanish.disable.autopickupdisable") == false)
-            setPlayerPickupDisabledStatus(uuid, false);
-        if(hasPermission(uuid, "cvvanish.disable.autointeractdisable") == false)
-            setPlayerInteractDisabledStatus(uuid, false);
-        setPlayerNightvisionEnabledStatus(uuid, false);
-        setPlayerUnlistedStatus(uuid, true);
-        setPlayerInvisibilityStatus(uuid, false);
-        teamHandler.sendHidePacketToServer(teamHandler.getTeamPacket(teamManager.getPlayerTeam(uuid)), ProxyServer.getInstance().getPlayer(uuid));
-    }
-
     public void switchPlayerVisibility(UUID uuid) {
-        if(invisiblePlayers.contains(uuid) || unlistedPlayers.contains(uuid)) {
+        if(invisiblePlayers.contains(uuid)) {
             setPlayerVisible(uuid);
         }
         else {
