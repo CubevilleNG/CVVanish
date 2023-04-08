@@ -49,7 +49,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
     private Set<UUID> interactInvertedPlayers = new HashSet<>();
     private Set<UUID> nightvisionEnabledPlayers = new HashSet<>();
 
-    private Set<UUID> godInvertedPlayers = new HashSet<>();
+    private Set<UUID> godEnabledPlayers = new HashSet<>();
 
     private Set<Material> interactDisallowedMaterials = new HashSet<>();
 
@@ -188,13 +188,13 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
                 removeNightvisionEffectFromPlayer(uuid);
             }
             else if(prefix.equals("god")) {
-                godInvertedPlayers.add(uuid);
+                godEnabledPlayers.add(uuid);
             }
             else if(prefix.equals("ungod")) {
-                godInvertedPlayers.remove(uuid);
+                godEnabledPlayers.remove(uuid);
             }
             else if(prefix.equals("dcreset")) {
-                godInvertedPlayers.remove(uuid);
+                godEnabledPlayers.remove(uuid);
                 nightvisionEnabledPlayers.remove(uuid);
                 interactInvertedPlayers.remove(uuid);
                 pickupInvertedPlayers.remove(uuid);
@@ -263,8 +263,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
     }
 
     public boolean isPlayerGod(Player player) {
-        boolean ret = godInvertedPlayers.contains(player.getUniqueId());
-        return ret;
+        return godEnabledPlayers.contains(player.getUniqueId());
     }
     
     @EventHandler
