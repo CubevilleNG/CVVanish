@@ -154,10 +154,10 @@ public class TeamHandler {
                 String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(newTeam.getPrefix()));
                 String color = oldPrefix.substring(oldPrefix.indexOf("#"), oldPrefix.indexOf("#") + 7);
                 oldPrefix = oldPrefix.substring(oldPrefix.indexOf("#") + 7);
-                if(plugin.isPlayerUnlisted(player.getUniqueId()) && plugin.isPlayerInvisible(player.getUniqueId())) {
+                if(plugin.isPlayerUnlisted(player.getUniqueId())) {
                     //System.out.println(player.getName() + " is unlisted");
                     if(canSenderSeePlayerState(p.getUniqueId(), player.getUniqueId())) {
-                        String newPrefix = ChatColor.of(color) + "§m§o" + oldPrefix;
+                        String newPrefix = ChatColor.of(color) + "§m" + oldPrefix;
                         newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
                         p.unsafe().sendPacket(newTeam);
                         //System.out.println("sending strikethrough packet of " + player.getName() + " to " + p.getName());
@@ -166,19 +166,6 @@ public class TeamHandler {
                     //System.out.println(player.getName() + " is invisible");
                     if(canSenderSeePlayerState(p.getUniqueId(), player.getUniqueId())) {
                         String newPrefix = ChatColor.of(color) + "§o" + oldPrefix;
-                        newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
-                        p.unsafe().sendPacket(newTeam);
-                        //System.out.println("sending italics packet of " + player.getName() + " to " + p.getName());
-                    } else {
-                        newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + oldPrefix)));
-                        p.unsafe().sendPacket(newTeam);
-                        //System.out.println("sending normal packet of " + player.getName() + " to " + p.getName());
-                        //System.out.println("normal packet prefix is " + newTeam.getPrefix());
-                    }
-                } else if(plugin.isPlayerUnlisted(player.getUniqueId())) {
-                    //System.out.println(player.getName() + " is invisible");
-                    if(canSenderSeePlayerState(p.getUniqueId(), player.getUniqueId())) {
-                        String newPrefix = ChatColor.of(color) + "§m" + oldPrefix;
                         newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
                         p.unsafe().sendPacket(newTeam);
                         //System.out.println("sending italics packet of " + player.getName() + " to " + p.getName());
