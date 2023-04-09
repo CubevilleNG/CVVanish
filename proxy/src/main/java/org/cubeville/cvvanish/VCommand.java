@@ -62,6 +62,14 @@ public class VCommand extends Command
                 else
                     player.sendMessage("§cNo permission.");
             }
+            else if(args[0].equals("ungod") || args[0].equals("god")) {
+                if(player.hasPermission("cvvanish.use.god")) {
+                    plugin.setPlayerGodStatus(uuid, args[0].equals("god"));
+                    cc = true;
+                }
+                else
+                    player.sendMessage("§cNo permission.");
+            }
             else if(args[0].equals("help")) {
                 player.sendMessage("§c§lVanish Plugin Commands");
                 player.sendMessage("§6/v§r - §6§oToggles the player between visible, and the state they log on with (smod/admin: invisible, pickup/interact off | sa: vanish, pickup/interact off)");
@@ -70,6 +78,7 @@ public class VCommand extends Command
                 player.sendMessage("§6/vis§r - §6§oPlayer becomes visible, and remains on tab.");
                 player.sendMessage("§6/poff /pon§r - §6§oThis will toggle whether you pick items up or not.");
                 player.sendMessage("§6/ioff /ion§r - §6§oThis will toggle whether you interact with pressure plates and tripwires.");
+                if(player.hasPermission("cvvanish.use.god")) player.sendMessage("§6/god /ungod§r - §6§oThis will toggle invincibility. Being invisible automatically also makes you invincible.");
                 if(player.hasPermission("cvvanish.use.nightvision")) player.sendMessage("§6/noff /non§r - §6§oThis will toggle nightvision.");
                 player.sendMessage("§6/vfj§r - §6§oSend fake join message, go into /vis mode");
                 player.sendMessage("§6/ifj§r - §6§oSend fake join message, go into /inv mode");
@@ -94,7 +103,38 @@ public class VCommand extends Command
                     }
                 }
                 else
-                    player.sendMessage("§cNo permission.");                
+                    player.sendMessage("§cNo permission.");
+            }
+            else if(args[0].equals("ungod") || args[0].equals("god")) {
+                if(player.hasPermission("cvvanish.use.godother")) {
+                    ProxiedPlayer p = ProxyServer.getInstance().getPlayer(args[1]);
+                    if (p == null) {
+                        player.sendMessage("§cInvalid player.");
+                        return;
+                    }
+                    UUID pu = p.getUniqueId();
+                    String message;
+                    if (args[0].equals("god")) {
+                        if (!plugin.isPlayerGod(pu)) {
+                            message = "§aApplied god to §e" + p.getName() + "§a.";
+                        }
+                        else {
+                            message = "§e" + p.getName() + " §aalready has god enabled.";
+                        }
+                    }
+                    else {
+                        if (plugin.isPlayerGod(pu)) {
+                            message = "§aRemoved god from §e" + p.getName() + "§a.";
+                        }
+                        else {
+                            message = "§e" + p.getName() + " §aalready has god disabled.";
+                        }
+                    }
+                    plugin.setPlayerGodStatus(pu, args[0].equals("god"));
+                    player.sendMessage(message);
+                }
+                else
+                    player.sendMessage("§cNo permission.");
             }
             else {
                 player.sendMessage("§cUnknown command!");
@@ -112,7 +152,9 @@ public class VCommand extends Command
             msg += " Pickup is ";
             msg += plugin.isPlayerItemPickupDisabled(uuid) ? "§edisabled" : "§eenabled";
             msg += "§a. Interact is ";
-            msg += plugin.isPlayerInteractDisabled(uuid) ? "§edisabled." : "§eenabled.";
+            msg += plugin.isPlayerInteractDisabled(uuid) ? "§edisabled§a." : "§eenabled§a.";
+            msg += " God is ";
+            msg += plugin.isPlayerGod(uuid) ? "§eenabled§a." : plugin.isPlayerInvisible(uuid) ? "§eenabled§a." : "§edisabled§a.";
             player.sendMessage(msg);
         }
         

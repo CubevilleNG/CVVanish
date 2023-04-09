@@ -31,6 +31,8 @@ public class ActionBarNotifier implements Runnable
                 message = "Vanished. ";
             else if(plugin.isPlayerInvisible(uuid))
                 message = "Invisible. ";
+            if(plugin.isPlayerGod(uuid) && !plugin.isPlayerInvisible(uuid) && ProxyServer.getInstance().getPlayer(uuid).hasPermission("cvvanish.actionbar.god"))
+                message += "God Enabled.";
             if(plugin.isPlayerItemPickupDisabled(uuid) && plugin.isPlayerInteractDisabled(uuid))
                 message += "PU, IA off.";
             else {

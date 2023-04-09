@@ -14,7 +14,7 @@
   <dependencies>
     <dependency>
       <groupId>org.spigotmc</groupId>
-      <artifactId>spigot</artifactId>
+      <artifactId>spigot-api</artifactId>
       <version>1.19-R0.1-SNAPSHOT</version>
       <type>jar</type>
       <scope>compile</scope>
@@ -42,7 +42,7 @@
   <repositories>
     <repository>
       <id>dmulloy2-repo</id>
-      <url>https://repo.dmulloy2.net/repository/public/</url>
+      <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots</url>
     </repository>
   </repositories>
   <build>

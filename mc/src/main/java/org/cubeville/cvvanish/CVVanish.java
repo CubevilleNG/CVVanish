@@ -49,6 +49,8 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
     private Set<UUID> interactInvertedPlayers = new HashSet<>();
     private Set<UUID> nightvisionEnabledPlayers = new HashSet<>();
 
+    private Set<UUID> godEnabledPlayers = new HashSet<>();
+
     private Set<Material> interactDisallowedMaterials = new HashSet<>();
 
     private Runnable nightVisionUpdater;
@@ -185,7 +187,14 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
                 nightvisionEnabledPlayers.remove(uuid);
                 removeNightvisionEffectFromPlayer(uuid);
             }
+            else if(prefix.equals("god")) {
+                godEnabledPlayers.add(uuid);
+            }
+            else if(prefix.equals("ungod")) {
+                godEnabledPlayers.remove(uuid);
+            }
             else if(prefix.equals("dcreset")) {
+                godEnabledPlayers.remove(uuid);
                 nightvisionEnabledPlayers.remove(uuid);
                 interactInvertedPlayers.remove(uuid);
                 pickupInvertedPlayers.remove(uuid);
@@ -252,6 +261,10 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
         ret ^= player.hasPermission("cvvanish.default.interactdisabled");
         return ret;
     }
+
+    public boolean isPlayerGod(Player player) {
+        return godEnabledPlayers.contains(player.getUniqueId());
+    }
     
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -314,7 +327,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
     public void onEntityTarget(EntityTargetEvent event) {
         if(!(event.getTarget() instanceof Player)) return;
         Player player = (Player) event.getTarget();
-        if(isPlayerInvisible(player))
+        if(isPlayerInvisible(player) || isPlayerGod(player))
             event.setCancelled(true);
     }
 
@@ -322,7 +335,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
     public void onEntityDamage(EntityDamageEvent event) {
         if(!(event.getEntity() instanceof Player)) return;
         Player player = (Player) event.getEntity();
-        if(isPlayerInvisible(player))
+        if(isPlayerInvisible(player) || isPlayerGod(player))
             event.setCancelled(true);
     }
 
@@ -334,7 +347,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
         Location loc = event.getLocation();
         
         for(Player player: loc.getWorld().getPlayers()) {
-            if(isPlayerInvisible(player)) {
+            if(isPlayerInvisible(player) || isPlayerGod(player)) {
                 Location ynl = player.getLocation().clone();
                 ynl.setY(loc.getY());
                 if(ynl.distance(loc) < 20) {
