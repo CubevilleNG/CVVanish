@@ -362,8 +362,17 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
     public void onFoodLevelChange(FoodLevelChangeEvent event) {
         if(!(event.getEntity() instanceof Player)) return;
         Player player = (Player) event.getEntity();
-        if(isPlayerInvisible(player))
+        if(isPlayerInvisible(player) || isPlayerGod(player))
             event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onEntityCombust(EntityCombustEvent event) {
+        if(!(event.getEntity() instanceof Player)) return;
+        Player player = (Player) event.getEntity();
+        if(isPlayerInvisible(player) || isPlayerGod(player)) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
