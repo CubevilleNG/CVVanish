@@ -1,5 +1,9 @@
 package org.cubeville.cvvanish;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 import com.comphenix.protocol.PacketType;
@@ -15,14 +19,19 @@ import com.comphenix.protocol.wrappers.WrappedWatchableObject;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.*;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPickupArrowEvent;
@@ -54,6 +63,8 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
     private Set<Material> interactDisallowedMaterials = new HashSet<>();
 
     private Runnable nightVisionUpdater;
+
+    public HashMap<String, HashMap<String, String>> worldTeamConfig;
 
     public void onEnable() {
         PluginManager pm = getServer().getPluginManager();
@@ -93,6 +104,46 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
                 }
             };
         getServer().getScheduler().runTaskTimer(this, nightVisionUpdater, 20, 20);
+        this.worldTeamConfig = new HashMap<>();
+        final File dataDir = getDataFolder();
+        if(!dataDir.exists()) dataDir.mkdirs();
+        File configFile = new File(dataDir, "config.yml");
+        if(!configFile.exists()) {
+            try {
+                configFile.createNewFile();
+                final InputStream inputStream = this.getResource(configFile.getName());
+                final FileOutputStream fileOutputStream = new FileOutputStream(configFile);
+                final byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = Objects.requireNonNull(inputStream).read(buffer)) != -1) {
+                    fileOutputStream.write(buffer, 0, bytesRead);
+                }
+                fileOutputStream.flush();
+                fileOutputStream.close();
+            } catch(IOException e) {
+                System.out.println("Unable to generate config file! " + e);
+            }
+        }
+        YamlConfiguration mainConfig = new YamlConfiguration();
+        try {
+            mainConfig.load(configFile);
+            ConfigurationSection worlds = mainConfig.getConfigurationSection("worlds");
+            if(worlds != null) {
+                for(World w : Bukkit.getWorlds()) {
+                    ConfigurationSection world = worlds.getConfigurationSection(w.getName().toLowerCase());
+                    if(world != null) {
+                        HashMap<String, String> teamConfig = new HashMap<>();
+                        String collision = world.getString("collision", "always");
+                        String nametags = world.getString("nametags", "always");
+                        teamConfig.put("collision", collision);
+                        teamConfig.put("nametags", nametags);
+                        this.worldTeamConfig.put(w.getName().toLowerCase(), teamConfig);
+                    }
+                }
+            }
+        } catch(IOException | InvalidConfigurationException e) {
+            System.out.println("Unable to load config file! " + e);
+        }
     }
     
     public void onDisable() {
@@ -307,6 +358,9 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
                 }
             };
         getServer().getScheduler().runTaskLater(this, runnable, 70);
+        if(!this.worldTeamConfig.isEmpty()) {
+            worldTeamConfigCheck(player);
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -408,5 +462,26 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
             event.setCancelled(true);
         }
     }
-    
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onWorldChange(PlayerChangedWorldEvent event) {
+        if(this.worldTeamConfig.isEmpty()) return;
+        worldTeamConfigCheck(event.getPlayer());
+    }
+
+    public void worldTeamConfigCheck(Player player) {
+        String world = player.getWorld().getName().toLowerCase();
+        if(!this.worldTeamConfig.containsKey(world)) return;
+        if(this.worldTeamConfig.get(world).containsKey("collision")) {
+            sendIPCWorldTeamConfig("collision:", this.worldTeamConfig.get(world).get("collision"), player.getName());
+        }
+        if(this.worldTeamConfig.get(world).containsKey("nametags")) {
+            sendIPCWorldTeamConfig("nametags:", this.worldTeamConfig.get(world).get("nametags"), player.getName());
+        }
+    }
+
+    public void sendIPCWorldTeamConfig(String key, String value, String player) {
+        System.out.println("Executing command: " + "pcmd worldteams " + key + value + " player:" + player);
+        Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "pcmd worldteams " + key + value + " player:" + player);
+    }
 }
