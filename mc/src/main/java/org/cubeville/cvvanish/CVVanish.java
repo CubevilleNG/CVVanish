@@ -481,7 +481,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
     }
 
     public void sendIPCWorldTeamConfig(String key, String value, String player) {
-        System.out.println("Executing command: " + "pcmd worldteams " + key + value + " player:" + player);
-        Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "pcmd worldteams " + key + value + " player:" + player);
+        System.out.println("Executing command: " + "pcmd teamoverride " + key + value + " player:" + player);
+        Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "pcmd teamoverride " + key + value + " player:" + player);
     }
 }
