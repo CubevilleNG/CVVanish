@@ -22,12 +22,25 @@ public class TeamHandler {
     public TeamManager teamManager;
 
     public HashMap<String, HashMap<String, String>> serverTeamConfig;
+    public HashMap<UUID, HashMap<String, String>> playerTeamConfig;
 
     public TeamHandler(CVVanish plugin, TeamManager teamManager) {
         this.plugin = plugin;
         this.teamManager = teamManager;
         this.serverTeamConfig = new HashMap<>();
+        this.playerTeamConfig = new HashMap<>();
         updateServerTeamConfig();
+    }
+
+    public void setPlayerTeamConfig(String key, String value, ProxiedPlayer player) {
+        HashMap<String, String> config;
+        if(this.playerTeamConfig.containsKey(player.getUniqueId())) {
+            config = this.playerTeamConfig.get(player.getUniqueId());
+        } else {
+            config = this.serverTeamConfig.get(player.getServer().getInfo().getName());
+        }
+        config.put(key, value);
+        this.playerTeamConfig.put(player.getUniqueId(), config);
     }
 
     public void updateServerTeamConfig() {
@@ -98,9 +111,14 @@ public class TeamHandler {
     public void sendAllCreatePacketsToPlayer(ProxiedPlayer player) {
         for(Team team : teamManager.getAllTeams()) {
             net.md_5.bungee.protocol.packet.Team newTeam = getTeamPacket(team);
-            HashMap<String, String> serverConfig = this.serverTeamConfig.get(player.getServer().getInfo().getName());
-            newTeam.setCollisionRule(serverConfig.get("collision"));
-            newTeam.setNameTagVisibility(serverConfig.get("nametags"));
+            HashMap<String, String> teamConfig;
+            if(this.playerTeamConfig.containsKey(player.getUniqueId())) {
+                teamConfig = this.playerTeamConfig.get(player.getUniqueId());
+            } else {
+                teamConfig = this.serverTeamConfig.get(player.getServer().getInfo().getName());
+            }
+            newTeam.setCollisionRule(teamConfig.get("collision"));
+            newTeam.setNameTagVisibility(teamConfig.get("nametags"));
             newTeam.setMode((byte) 0);
             ProxiedPlayer p = ProxyServer.getInstance().getPlayer(teamManager.getRealNameUUID((String) team.getPlayers().toArray()[0]));
             if(p != null) {
@@ -144,12 +162,17 @@ public class TeamHandler {
 
     public void sendCreatePacketToServer(net.md_5.bungee.protocol.packet.Team team, ProxiedPlayer player) {
         team.setMode((byte) 0);
-        HashMap<String, String> serverConfig = this.serverTeamConfig.get(player.getServer().getInfo().getName());
-        team.setCollisionRule(serverConfig.get("collision"));
-        team.setNameTagVisibility(serverConfig.get("nametags"));
+        HashMap<String, String> teamConfig;
         for(UUID uuid : plugin.getConnectedPlayers()) {
             ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
             if(!p.equals(player)) {
+                if(this.playerTeamConfig.containsKey(uuid)) {
+                    teamConfig = this.playerTeamConfig.get(uuid);
+                } else {
+                    teamConfig = this.serverTeamConfig.get(player.getServer().getInfo().getName());
+                }
+                team.setCollisionRule(teamConfig.get("collision"));
+                team.setNameTagVisibility(teamConfig.get("nametags"));
                 net.md_5.bungee.protocol.packet.Team newTeam = createNewTeamPacket(team);
                 String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(newTeam.getPrefix()));
                 String color = oldPrefix.substring(oldPrefix.indexOf("#"), oldPrefix.indexOf("#") + 7);
@@ -225,11 +248,16 @@ public class TeamHandler {
 
     public void sendVisiblePacketToServer(net.md_5.bungee.protocol.packet.Team team, ProxiedPlayer player) {
         team.setMode((byte) 1);
-        HashMap<String, String> serverConfig = this.serverTeamConfig.get(player.getServer().getInfo().getName());
-        team.setCollisionRule(serverConfig.get("collision"));
-        team.setNameTagVisibility(serverConfig.get("nametags"));
+        HashMap<String, String> teamConfig;
         //System.out.println(player.getName() + " status just changed to visible");
         for(UUID uuid : plugin.getConnectedPlayers()) {
+            if(this.playerTeamConfig.containsKey(uuid)) {
+                teamConfig = this.playerTeamConfig.get(uuid);
+            } else {
+                teamConfig = this.serverTeamConfig.get(player.getServer().getInfo().getName());
+            }
+            team.setCollisionRule(teamConfig.get("collision"));
+            team.setNameTagVisibility(teamConfig.get("nametags"));
             ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
             net.md_5.bungee.protocol.packet.Team newTeam = createNewTeamPacket(team);
             if(canSenderSeePlayerState(p.getUniqueId(), player.getUniqueId())) {
@@ -247,11 +275,16 @@ public class TeamHandler {
 
     public void sendInvisiblePacketToServer(net.md_5.bungee.protocol.packet.Team team, ProxiedPlayer player) {
         team.setMode((byte) 0);
-        HashMap<String, String> serverConfig = this.serverTeamConfig.get(player.getServer().getInfo().getName());
-        team.setCollisionRule(serverConfig.get("collision"));
-        team.setNameTagVisibility(serverConfig.get("nametags"));
+        HashMap<String, String> teamConfig;
         //System.out.println(player.getName() + " status just changed to invisible");
         for(UUID uuid : plugin.getConnectedPlayers()) {
+            if(this.playerTeamConfig.containsKey(uuid)) {
+                teamConfig = this.playerTeamConfig.get(uuid);
+            } else {
+                teamConfig = this.serverTeamConfig.get(player.getServer().getInfo().getName());
+            }
+            team.setCollisionRule(teamConfig.get("collision"));
+            team.setNameTagVisibility(teamConfig.get("nametags"));
             net.md_5.bungee.protocol.packet.Team newTeam = createNewTeamPacket(team);
             ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
             String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(team.getPrefix()));
@@ -274,11 +307,16 @@ public class TeamHandler {
 
     public void sendVanishPacketToServer(net.md_5.bungee.protocol.packet.Team team, ProxiedPlayer player) {
         team.setMode((byte) 1);
-        HashMap<String, String> serverConfig = this.serverTeamConfig.get(player.getServer().getInfo().getName());
-        team.setCollisionRule(serverConfig.get("collision"));
-        team.setNameTagVisibility(serverConfig.get("nametags"));
+        HashMap<String, String> teamConfig;
         //System.out.println(player.getName() + " status just changed to unlisted");
         for(UUID uuid : plugin.getConnectedPlayers()) {
+            if(this.playerTeamConfig.containsKey(uuid)) {
+                teamConfig = this.playerTeamConfig.get(uuid);
+            } else {
+                teamConfig = this.serverTeamConfig.get(player.getServer().getInfo().getName());
+            }
+            team.setCollisionRule(teamConfig.get("collision"));
+            team.setNameTagVisibility(teamConfig.get("nametags"));
             net.md_5.bungee.protocol.packet.Team newTeam = createNewTeamPacket(team);
             ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
             p.unsafe().sendPacket(newTeam);

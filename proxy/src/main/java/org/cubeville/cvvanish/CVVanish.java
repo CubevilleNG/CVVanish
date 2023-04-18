@@ -65,6 +65,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         teamManager = new TeamManager(this);
         teamHandler = new TeamHandler(this, teamManager);
         pm.registerCommand(this, new VReloadCommand(teamHandler));
+        pm.registerCommand(this, new TeamOverrideCommand(teamHandler));
         pm.registerListener(this, this);
 
         UserConnection.setTabListFactory(new CVTabListFactory());
