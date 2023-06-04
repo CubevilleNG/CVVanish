@@ -79,7 +79,7 @@ public class CVTabList extends TabList
     }
 
     public void showPlayer(UUID uuid) {
-        if(playerAddPackets.get(uuid) != null && player.getServer() != null) {
+        if(playerAddPackets.get(uuid) != null && player.getServer() != null && ProxyServer.getInstance().getPlayer(uuid) != null && ProxyServer.getInstance().getPlayer(uuid).getServer() != null) {
             if(!(plugin.getTeamEnabledServers().contains(player.getServer().getInfo().getName().toLowerCase()) &&
                     plugin.getTeamEnabledServers().contains(ProxyServer.getInstance().getPlayer(uuid).getServer().getInfo().getName().toLowerCase()))) {
                 playerAddPacketsLock.lock();
