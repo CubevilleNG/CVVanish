@@ -5,16 +5,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.viaversion.viaversion.api.Via;
-import com.viaversion.viaversion.api.ViaAPI;
-import com.viaversion.viaversion.api.ViaManager;
-import com.viaversion.viaversion.api.protocol.ProtocolManager;
-import io.netty.handler.codec.EncoderException;
-import net.md_5.bungee.UserConnection;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
-import net.md_5.bungee.connection.LoginResult;
-import net.md_5.bungee.protocol.Property;
 import net.md_5.bungee.protocol.packet.PlayerListItem;
 import net.md_5.bungee.protocol.packet.PlayerListItemRemove;
 import net.md_5.bungee.protocol.packet.PlayerListItemUpdate;
@@ -144,9 +136,7 @@ public class CVTabList extends TabList
     }
 
     public void sendSingleItemPacket(PlayerListItem.Action action, PlayerListItem.Item item) {
-        int serverVersion = Via.proxyPlatform().protocolDetectorService().serverProtocolVersion(player.getServer().getInfo().getName());
-        //int playerVersion = Via.getAPI().getPlayerVersion(player);
-        //System.out.println(player.getName() + " is on a server with version " + serverVersion + " and on a client with version of " + playerVersion);
+        int serverVersion = player.getPendingConnection().getVersion();
         if(serverVersion <= 758) {
             PlayerListItem playerListItem = new PlayerListItem();
             playerListItem.setAction(action);
