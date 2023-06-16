@@ -15,6 +15,7 @@ import org.cubeville.cvvanish.CVVanish;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class TeamHandler {
 
@@ -22,7 +23,7 @@ public class TeamHandler {
     public TeamManager teamManager;
 
     public HashMap<String, HashMap<String, String>> serverTeamConfig;
-    public HashMap<UUID, HashMap<String, String>> playerTeamConfig;
+    public final HashMap<UUID, HashMap<String, String>> playerTeamConfig;
 
     public TeamHandler(CVVanish plugin, TeamManager teamManager) {
         this.plugin = plugin;
@@ -33,13 +34,17 @@ public class TeamHandler {
     }
 
     public void setPlayerTeamConfig(String key, String value, ProxiedPlayer player) {
+        String finalValue = value;
+        if(value.equalsIgnoreCase("reset")) {
+            finalValue = this.serverTeamConfig.get(player.getServer().getInfo().getName()).get(key);
+        }
         HashMap<String, String> config;
         if(this.playerTeamConfig.containsKey(player.getUniqueId())) {
-            config = this.playerTeamConfig.get(player.getUniqueId());
+            config = new HashMap<>(this.playerTeamConfig.get(player.getUniqueId()));
         } else {
-            config = this.serverTeamConfig.get(player.getServer().getInfo().getName());
+            config = new HashMap<>(this.serverTeamConfig.get(player.getServer().getInfo().getName()));
         }
-        config.put(key, value);
+        config.put(key, finalValue);
         this.playerTeamConfig.put(player.getUniqueId(), config);
     }
 

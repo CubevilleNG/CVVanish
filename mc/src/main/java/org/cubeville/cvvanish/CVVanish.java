@@ -79,7 +79,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
 	}
 
         protocolManager = ProtocolLibrary.getProtocolManager();
-        petListener();
+        //petListener();
 	
         interactDisallowedMaterials.add(Material.ACACIA_PRESSURE_PLATE);
         interactDisallowedMaterials.add(Material.BIRCH_PRESSURE_PLATE);
@@ -154,7 +154,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
         return false;
     }
 
-    public void petListener() {
+    /*public void petListener() {
         protocolManager.addPacketListener(new PacketAdapter(this, ListenerPriority.NORMAL, PacketType.Play.Server.ENTITY_METADATA) {
             @Override
             public void onPacketSending(PacketEvent event) {
@@ -197,7 +197,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
                 event.setPacket(packet);
             }
         });
-    }
+    }*/
 
     public void process(String channel, String message) {
         if(channel.equals("vanish")) {
@@ -470,18 +470,24 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
     }
 
     public void worldTeamConfigCheck(Player player) {
-        String world = player.getWorld().getName().toLowerCase();
-        if(!this.worldTeamConfig.containsKey(world)) return;
-        if(this.worldTeamConfig.get(world).containsKey("collision")) {
-            sendIPCWorldTeamConfig("collision:", this.worldTeamConfig.get(world).get("collision"), player.getName());
-        }
-        if(this.worldTeamConfig.get(world).containsKey("nametags")) {
-            sendIPCWorldTeamConfig("nametags:", this.worldTeamConfig.get(world).get("nametags"), player.getName());
+        String to = player.getWorld().getName().toLowerCase();
+        if(this.worldTeamConfig.containsKey(to)) {
+            if(this.worldTeamConfig.get(to).containsKey("collision")) {
+                sendIPCWorldTeamConfig("collision:", this.worldTeamConfig.get(to).get("collision"), player.getName());
+            }
+            if(this.worldTeamConfig.get(to).containsKey("nametags")) {
+                sendIPCWorldTeamConfig("nametags:", this.worldTeamConfig.get(to).get("nametags"), player.getName());
+            }
+        } else {
+            sendIPCWorldTeamConfig("collision:", "reset", player.getName());
+            sendIPCWorldTeamConfig("nametags:", "reset", player.getName());
         }
     }
 
     public void sendIPCWorldTeamConfig(String key, String value, String player) {
-        System.out.println("Executing command: " + "pcmd teamoverride " + key + value + " player:" + player);
-        Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "pcmd teamoverride " + key + value + " player:" + player);
+        Bukkit.getScheduler().runTaskLater(this, () -> {
+            System.out.println("Executing command: " + "pcmd teamoverride " + key + value + " player:" + player);
+            Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "pcmd teamoverride " + key + value + " player:" + player);
+        }, 40);
     }
 }

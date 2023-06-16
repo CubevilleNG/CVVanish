@@ -28,11 +28,11 @@ public class TeamOverrideCommand extends Command {
         String configValue;
         String playerKeyValue = args[1];
         ProxiedPlayer player;
-        if(configKeyValue.equals("collision:never") || configKeyValue.equals("collision:always") || configKeyValue.equals("nametags:never") || configKeyValue.equals("nametags:always")) {
+        if(configKeyValue.equals("collision:never") || configKeyValue.equals("collision:always") || configKeyValue.equals("collision:reset") || configKeyValue.equals("nametags:never") || configKeyValue.equals("nametags:always") || configKeyValue.equals("nametags:reset")) {
             configKey = configKeyValue.substring(0, configKeyValue.indexOf(":"));
             configValue = configKeyValue.substring(configKeyValue.indexOf(":") + 1);
         } else {
-            commandSender.sendMessage(new TextComponent(ChatColor.RED + "Please only use nametags and collision with always or never!"));
+            commandSender.sendMessage(new TextComponent(ChatColor.RED + "Please only use nametags and collision with always, never, or reset!"));
             return;
         }
         if(playerKeyValue.contains("player:") && ProxyServer.getInstance().getPlayer(playerKeyValue.substring(playerKeyValue.indexOf(":") + 1)) != null) {
@@ -42,6 +42,7 @@ public class TeamOverrideCommand extends Command {
             return;
         }
         teamHandler.setPlayerTeamConfig(configKey, configValue, player);
+        teamHandler.init(player);
         commandSender.sendMessage(new TextComponent(configKey + ":" + configValue + " set for player:" + player.getName()));
     }
 }
