@@ -92,7 +92,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         instance = this;
 
         teamEnabledServers = new ArrayList<>();
-        teamEnabledServers.add("cv7wargames");
+        teamEnabledServers.add("cv7amongus");
         teamEnabledServers.add("cv7bedwars");
 
         playerDataManager = PlayerDataManager.getInstance();
