@@ -42,6 +42,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import org.bukkit.scheduler.BukkitTask;
 import org.cubeville.cvipc.CVIPC;
 import org.cubeville.cvipc.IPCInterface;
 
@@ -65,6 +66,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
     private Runnable nightVisionUpdater;
 
     public HashMap<String, HashMap<String, String>> worldTeamConfig;
+    public HashMap<UUID, Long> playerTeamConfigQueue;
 
     public void onEnable() {
         PluginManager pm = getServer().getPluginManager();
@@ -105,6 +107,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
             };
         getServer().getScheduler().runTaskTimer(this, nightVisionUpdater, 20, 20);
         this.worldTeamConfig = new HashMap<>();
+        this.playerTeamConfigQueue = new HashMap<>();
         final File dataDir = getDataFolder();
         if(!dataDir.exists()) dataDir.mkdirs();
         File configFile = new File(dataDir, "config.yml");
@@ -472,21 +475,28 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
         String to = player.getWorld().getName().toLowerCase();
         if(this.worldTeamConfig.containsKey(to)) {
             if(this.worldTeamConfig.get(to).containsKey("collision")) {
-                sendIPCWorldTeamConfig("collision:", this.worldTeamConfig.get(to).get("collision"), player.getName());
+                sendIPCWorldTeamConfig("collision:", this.worldTeamConfig.get(to).get("collision"), player);
             }
             if(this.worldTeamConfig.get(to).containsKey("nametags")) {
-                sendIPCWorldTeamConfig("nametags:", this.worldTeamConfig.get(to).get("nametags"), player.getName());
+                sendIPCWorldTeamConfig("nametags:", this.worldTeamConfig.get(to).get("nametags"), player);
             }
         } else {
-            sendIPCWorldTeamConfig("collision:", "reset", player.getName());
-            sendIPCWorldTeamConfig("nametags:", "reset", player.getName());
+            sendIPCWorldTeamConfig("collision:", "reset", player);
+            sendIPCWorldTeamConfig("nametags:", "reset", player);
         }
     }
 
-    public void sendIPCWorldTeamConfig(String key, String value, String player) {
+    public void sendIPCWorldTeamConfig(String key, String value, Player player) {
+        long i = 1;
+        if(this.playerTeamConfigQueue.get(player.getUniqueId()) != null) {
+            i = this.playerTeamConfigQueue.get(player.getUniqueId()) + i;
+        }
+        this.playerTeamConfigQueue.put(player.getUniqueId(), i);
         Bukkit.getScheduler().runTaskLater(this, () -> {
-            System.out.println("Executing command: " + "pcmd teamoverride " + key + value + " player:" + player);
-            Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "pcmd teamoverride " + key + value + " player:" + player);
-        }, 40);
+            long c = this.playerTeamConfigQueue.get(player.getUniqueId()) - 1;
+            this.playerTeamConfigQueue.put(player.getUniqueId(), c);
+            System.out.println("Executing command: " + "pcmd teamoverride " + key + value + " player:" + player.getName());
+            Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "pcmd teamoverride " + key + value + " player:" + player.getName());
+        }, 20 * i);
     }
 }
