@@ -358,9 +358,8 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
                 }
             };
         getServer().getScheduler().runTaskLater(this, runnable, 70);
-        if(!this.worldTeamConfig.isEmpty()) {
-            worldTeamConfigCheck(player);
-        }
+
+        worldTeamConfigCheck(player);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
