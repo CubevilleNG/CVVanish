@@ -81,7 +81,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
 	}
 
         protocolManager = ProtocolLibrary.getProtocolManager();
-        //petListener();
+        petListener();
 	
         interactDisallowedMaterials.add(Material.ACACIA_PRESSURE_PLATE);
         interactDisallowedMaterials.add(Material.BIRCH_PRESSURE_PLATE);
@@ -157,7 +157,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
         return false;
     }
 
-    /*public void petListener() {
+    public void petListener() {
         protocolManager.addPacketListener(new PacketAdapter(this, ListenerPriority.NORMAL, PacketType.Play.Server.ENTITY_METADATA) {
             @Override
             public void onPacketSending(PacketEvent event) {
@@ -169,6 +169,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
 
                 if(entity == null) return;
                 if(!(entity instanceof Tameable)) return;
+                if(entity.getType().equals(EntityType.CAMEL)) return;
 
                 final WrappedDataWatcher dataWatcher = WrappedDataWatcher.getEntityWatcher(entity).deepClone();
 
@@ -200,7 +201,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
                 event.setPacket(packet);
             }
         });
-    }*/
+    }
 
     public void process(String channel, String message) {
         if(channel.equals("vanish")) {
@@ -291,10 +292,14 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
                 }
             }
             if(openInv != null) openInv.setPlayerSilentChestStatus(player, invis);
-            if(invis)
+            if(invis) {
                 player.setMetadata("vanished", new FixedMetadataValue(this, true));
-            else
+                player.setSleepingIgnored(true);
+            } else {
                 if(player.hasMetadata("vanished")) player.removeMetadata("vanished", this);
+                player.setSleepingIgnored(false);
+            }
+
         }
     }
 
@@ -323,6 +328,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         final Player player = event.getPlayer();
+        if(isPlayerInvisible(player)) player.setSleepingIgnored(true);
         for(Player p: Bukkit.getServer().getOnlinePlayers()) { 
             if(!p.getUniqueId().equals(player.getUniqueId())) {
                 if(isPlayerInvisible(player) &&
