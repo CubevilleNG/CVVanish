@@ -170,6 +170,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
                 if(entity == null) return;
                 if(!(entity instanceof Tameable)) return;
                 if(entity.getType().equals(EntityType.CAMEL)) return;
+                if(!(WrappedDataWatcher.getEntityWatcher(entity).getObject(18) instanceof UUID)) return;
 
                 final WrappedDataWatcher dataWatcher = WrappedDataWatcher.getEntityWatcher(entity).deepClone();
 
