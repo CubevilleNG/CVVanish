@@ -8,6 +8,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 import net.md_5.bungee.UserConnection;
 import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.PlayerDisconnectEvent;
 import net.md_5.bungee.api.event.PostLoginEvent;
@@ -94,6 +95,8 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         teamEnabledServers = new ArrayList<>();
         teamEnabledServers.add("cv7amongus");
         teamEnabledServers.add("cv7bedwars");
+        teamEnabledServers.add("oldserver");
+        teamEnabledServers.add("ptown");
 
         playerDataManager = PlayerDataManager.getInstance();
     }
@@ -201,6 +204,45 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         if((System.currentTimeMillis() / 1000L) - loginTime.get(event.getPlayer().getUniqueId()) < 10) addPacketAvailable(event.getPlayer().getUniqueId());
     }
 
+    /*public void teamsServerLogic(ServerInfo from, ProxiedPlayer player) {
+        if(from != null) { //todo player is switching servers and not first login
+            if(teamEnabledServers.contains(from.getName().toLowerCase())) { //todo server coming from was teams enabled
+                if(teamEnabledServers.contains(player.getServer().getInfo().getName().toLowerCase())) { //todo server going to is teams enabled
+                    initTeamsServer(player);
+                } else { //todo server going to is not teams enabled
+                    initNonTeamsServer(player);
+                }
+            } else if(teamEnabledServers.contains(player.getServer().getInfo().getName().toLowerCase())) { //todo server going to is teams enabled
+                initTeamsServer(player);
+            }
+        } else { //todo player is on first login
+            if(teamEnabledServers.contains(player.getServer().getInfo().getName().toLowerCase())) { //todo server going to is teams enabled
+                initTeamsServer(player);
+            }
+        }
+    }
+
+    public void initNonTeamsServer(ProxiedPlayer player) {
+        CVTabList.getInstanceFor(player.getUniqueId()).sendFakeNamesToPlayer();
+        for(UUID uuid : connectedPlayers) {
+            ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
+            if(teamEnabledServers.contains(p.getServer().getInfo().getName().toLowerCase())) {
+                CVTabList.getInstanceFor(p.getUniqueId()).sendFakeNameToPlayer(player.getUniqueId());
+            }
+        }
+    }
+
+    public void initTeamsServer(ProxiedPlayer player) {
+        CVTabList.getInstanceFor(player.getUniqueId()).sendFakeNamesToPlayer();
+        CVTabList.getInstanceFor(player.getUniqueId()).sendRealNamesToPlayer();
+        for(UUID uuid : connectedPlayers) {
+            ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
+            if(player.getServer().getInfo().getName().equalsIgnoreCase(p.getServer().getInfo().getName())) {
+                CVTabList.getInstanceFor(p.getUniqueId()).sendRealNameToPlayer(player.getUniqueId());
+            }
+        }
+    }*/
+
     @EventHandler
     public void onDisconnect(final PlayerDisconnectEvent event) {
         UUID uuid = event.getPlayer().getUniqueId();
@@ -241,6 +283,9 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
                 CVTabList.getInstanceFor(targetPlayer).showPlayer(uuid);
             }
         }
+        /*if(ProxyServer.getInstance().getPlayer(uuid) != null) {
+            teamsServerLogic(null, ProxyServer.getInstance().getPlayer(uuid));
+        }*/
     }
 
     public void sendUpdatedPacket(UUID uuid) {
