@@ -95,6 +95,9 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
         interactDisallowedMaterials.add(Material.SPRUCE_PRESSURE_PLATE);
         interactDisallowedMaterials.add(Material.STONE_PRESSURE_PLATE);
         interactDisallowedMaterials.add(Material.WARPED_PRESSURE_PLATE);
+        interactDisallowedMaterials.add(Material.MANGROVE_PRESSURE_PLATE);
+        interactDisallowedMaterials.add(Material.BAMBOO_PRESSURE_PLATE);
+        interactDisallowedMaterials.add(Material.CHERRY_PRESSURE_PLATE);
 
         interactDisallowedMaterials.add(Material.TRIPWIRE);
         
@@ -168,9 +171,24 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
                 final Entity entity = packet.getEntityModifier(event).read(0);
 
                 if(entity == null) return;
-                if(!(entity instanceof Tameable)) return;
-                if(entity.getType().equals(EntityType.CAMEL)) return;
-                if(!(WrappedDataWatcher.getEntityWatcher(entity).getObject(18) instanceof UUID)) return;
+                if(WrappedDataWatcher.getEntityWatcher(entity).getObject(18) == null) return;
+                if(!(WrappedDataWatcher.getEntityWatcher(entity).getObject(18) instanceof Optional)) return;
+                try {
+                    String str = WrappedDataWatcher.getEntityWatcher(entity).getObject(18).toString();
+                    if(!str.contains("[") || !str.contains("]")) {
+                        System.out.println("Packet doesn't contain [] bound for " + event.getPlayer().getName() + " with type of " + entity.getType() + " and value of " + str);
+                        return;
+                    }
+                    UUID ownerUUID = UUID.fromString(str.substring(str.indexOf("[") + 1, str.indexOf("]")));
+                    if(event.getPlayer().getUniqueId().equals(ownerUUID)) {
+                        System.out.println("Packet bound for " + event.getPlayer().getName() + " not modified. They are owner of " + entity.getType());
+                        return;
+                    } else {
+                        System.out.println("Packet bound for " + event.getPlayer().getName() + " WILL BE modified. They are NOT owner of " + entity.getType());
+                    }
+                } catch (IllegalArgumentException ignored) {
+                    return;
+                }
 
                 final WrappedDataWatcher dataWatcher = WrappedDataWatcher.getEntityWatcher(entity).deepClone();
 
