@@ -31,17 +31,16 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.*;
-import org.bukkit.event.player.PlayerChangedWorldEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerPickupArrowEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.event.world.GenericGameEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
 import org.cubeville.cvipc.CVIPC;
 import org.cubeville.cvipc.IPCInterface;
@@ -64,6 +63,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
     private Set<Material> interactDisallowedMaterials = new HashSet<>();
 
     private Runnable nightVisionUpdater;
+    private BukkitScheduler scheduler;
 
     public HashMap<String, HashMap<String, String>> worldTeamConfig;
     public HashMap<UUID, Long> playerTeamConfigQueue;
@@ -108,7 +108,9 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
                     }
                 }
             };
-        getServer().getScheduler().runTaskTimer(this, nightVisionUpdater, 20, 20);
+        this.scheduler = getServer().getScheduler();
+        this.scheduler.runTaskTimer(this, nightVisionUpdater, 20, 20);
+
         this.worldTeamConfig = new HashMap<>();
         this.playerTeamConfigQueue = new HashMap<>();
         final File dataDir = getDataFolder();
@@ -173,22 +175,6 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
                 if(entity == null) return;
                 if(WrappedDataWatcher.getEntityWatcher(entity).getObject(18) == null) return;
                 if(!(WrappedDataWatcher.getEntityWatcher(entity).getObject(18) instanceof Optional)) return;
-                try {
-                    String str = WrappedDataWatcher.getEntityWatcher(entity).getObject(18).toString();
-                    if(!str.contains("[") || !str.contains("]")) {
-                        System.out.println("Packet doesn't contain [] bound for " + event.getPlayer().getName() + " with type of " + entity.getType() + " and value of " + str);
-                        return;
-                    }
-                    UUID ownerUUID = UUID.fromString(str.substring(str.indexOf("[") + 1, str.indexOf("]")));
-                    if(event.getPlayer().getUniqueId().equals(ownerUUID)) {
-                        System.out.println("Packet bound for " + event.getPlayer().getName() + " not modified. They are owner of " + entity.getType());
-                        return;
-                    } else {
-                        System.out.println("Packet bound for " + event.getPlayer().getName() + " WILL BE modified. They are NOT owner of " + entity.getType());
-                    }
-                } catch (IllegalArgumentException ignored) {
-                    return;
-                }
 
                 final WrappedDataWatcher dataWatcher = WrappedDataWatcher.getEntityWatcher(entity).deepClone();
 
@@ -220,6 +206,24 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
                 event.setPacket(packet);
             }
         });
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onPetInteract(PlayerInteractEntityEvent e) {
+        if(e.isCancelled()) return;
+        Entity entity = e.getRightClicked();
+        if(!entity.getType().equals(EntityType.WOLF) && !entity.getType().equals(EntityType.PARROT) && !entity.getType().equals(EntityType.CAT)) return;
+        if(!((Tameable) entity).isTamed()) return;
+        if(((Tameable) entity).getOwner() == null || !((Tameable) entity).getOwner().getUniqueId().equals(e.getPlayer().getUniqueId())) return;
+        e.setCancelled(true);
+        if(e.getHand().equals(EquipmentSlot.OFF_HAND)) return;
+        if(entity.getType().equals(EntityType.WOLF)) {
+            ((Wolf) entity).setSitting(!((Wolf) entity).isSitting());
+        } else if(entity.getType().equals(EntityType.CAT)) {
+            ((Cat) entity).setSitting(!((Cat) entity).isSitting());
+        } else if(entity.getType().equals(EntityType.PARROT)) {
+            if(entity.isOnGround()) ((Parrot) entity).setSitting(!((Parrot) entity).isSitting());
+        }
     }
 
     public void process(String channel, String message) {
