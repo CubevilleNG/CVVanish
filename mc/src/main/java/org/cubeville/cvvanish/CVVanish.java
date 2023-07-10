@@ -16,10 +16,7 @@ import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.wrappers.WrappedDataValue;
 import com.comphenix.protocol.wrappers.WrappedDataWatcher;
 import com.comphenix.protocol.wrappers.WrappedWatchableObject;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
@@ -34,6 +31,7 @@ import org.bukkit.event.entity.*;
 import org.bukkit.event.player.*;
 import org.bukkit.event.world.GenericGameEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -41,7 +39,6 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import org.bukkit.scheduler.BukkitScheduler;
-import org.bukkit.scheduler.BukkitTask;
 import org.cubeville.cvipc.CVIPC;
 import org.cubeville.cvipc.IPCInterface;
 
@@ -67,6 +64,8 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
 
     public HashMap<String, HashMap<String, String>> worldTeamConfig;
     public HashMap<UUID, Long> playerTeamConfigQueue;
+
+    public Map<Material, DyeColor> collarMappings = new HashMap<>();
 
     public void onEnable() {
         PluginManager pm = getServer().getPluginManager();
@@ -98,6 +97,23 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
         interactDisallowedMaterials.add(Material.MANGROVE_PRESSURE_PLATE);
         interactDisallowedMaterials.add(Material.BAMBOO_PRESSURE_PLATE);
         interactDisallowedMaterials.add(Material.CHERRY_PRESSURE_PLATE);
+
+        collarMappings.put(Material.WHITE_DYE, DyeColor.WHITE);
+        collarMappings.put(Material.LIGHT_GRAY_DYE, DyeColor.LIGHT_GRAY);
+        collarMappings.put(Material.GRAY_DYE, DyeColor.GRAY);
+        collarMappings.put(Material.BLACK_DYE, DyeColor.BLACK);
+        collarMappings.put(Material.BROWN_DYE, DyeColor.BROWN);
+        collarMappings.put(Material.RED_DYE, DyeColor.RED);
+        collarMappings.put(Material.ORANGE_DYE, DyeColor.ORANGE);
+        collarMappings.put(Material.YELLOW_DYE, DyeColor.YELLOW);
+        collarMappings.put(Material.LIME_DYE, DyeColor.LIME);
+        collarMappings.put(Material.GREEN_DYE, DyeColor.GREEN);
+        collarMappings.put(Material.CYAN_DYE, DyeColor.CYAN);
+        collarMappings.put(Material.LIGHT_BLUE_DYE, DyeColor.LIGHT_BLUE);
+        collarMappings.put(Material.BLUE_DYE, DyeColor.BLUE);
+        collarMappings.put(Material.PURPLE_DYE, DyeColor.PURPLE);
+        collarMappings.put(Material.MAGENTA_DYE, DyeColor.MAGENTA);
+        collarMappings.put(Material.PINK_DYE, DyeColor.PINK);
 
         interactDisallowedMaterials.add(Material.TRIPWIRE);
         
@@ -217,12 +233,39 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
         if(((Tameable) entity).getOwner() == null || !((Tameable) entity).getOwner().getUniqueId().equals(e.getPlayer().getUniqueId())) return;
         e.setCancelled(true);
         if(e.getHand().equals(EquipmentSlot.OFF_HAND)) return;
+        Material item = e.getPlayer().getInventory().getItemInMainHand().getType();
         if(entity.getType().equals(EntityType.WOLF)) {
-            ((Wolf) entity).setSitting(!((Wolf) entity).isSitting());
+            if(item.equals(Material.AIR)) {
+                ((Wolf) entity).setSitting(!((Wolf) entity).isSitting());
+            } else if(collarMappings.containsKey(item)) {
+                ((Wolf) entity).setCollarColor(collarMappings.get(item));
+                ItemStack dye = e.getPlayer().getInventory().getItemInMainHand();
+                dye.setAmount(dye.getAmount() - 1);
+                e.getPlayer().getInventory().setItemInMainHand(dye);
+            } else if(((Wolf) entity).isBreedItem(item) && !((Wolf) entity).isLoveMode()) {
+                ((Wolf) entity).setLoveModeTicks(600);
+                ItemStack food = e.getPlayer().getInventory().getItemInMainHand();
+                food.setAmount(food.getAmount() - 1);
+                e.getPlayer().getInventory().setItemInMainHand(food);
+            }
         } else if(entity.getType().equals(EntityType.CAT)) {
-            ((Cat) entity).setSitting(!((Cat) entity).isSitting());
+            if(item.equals(Material.AIR)) {
+                ((Cat) entity).setSitting(!((Cat) entity).isSitting());
+            } else if(collarMappings.containsKey(item)) {
+                ((Cat) entity).setCollarColor(collarMappings.get(item));
+                ItemStack dye = e.getPlayer().getInventory().getItemInMainHand();
+                dye.setAmount(dye.getAmount() - 1);
+                e.getPlayer().getInventory().setItemInMainHand(dye);
+            } else if(((Cat) entity).isBreedItem(item) && !((Cat) entity).isLoveMode()) {
+                ((Cat) entity).setLoveModeTicks(600);
+                ItemStack food = e.getPlayer().getInventory().getItemInMainHand();
+                food.setAmount(food.getAmount() - 1);
+                e.getPlayer().getInventory().setItemInMainHand(food);
+            }
         } else if(entity.getType().equals(EntityType.PARROT)) {
-            if(entity.isOnGround()) ((Parrot) entity).setSitting(!((Parrot) entity).isSitting());
+            if(item.equals(Material.AIR)) {
+                if(entity.isOnGround()) ((Parrot) entity).setSitting(!((Parrot) entity).isSitting());
+            }
         }
     }
 
