@@ -231,6 +231,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
         if(!entity.getType().equals(EntityType.WOLF) && !entity.getType().equals(EntityType.PARROT) && !entity.getType().equals(EntityType.CAT)) return;
         if(!((Tameable) entity).isTamed()) return;
         if(((Tameable) entity).getOwner() == null || !((Tameable) entity).getOwner().getUniqueId().equals(e.getPlayer().getUniqueId())) return;
+        if(e.getPlayer().getInventory().getItemInMainHand().getType().equals(Material.LEAD)) return;
         e.setCancelled(true);
         if(e.getHand().equals(EquipmentSlot.OFF_HAND)) return;
         Material item = e.getPlayer().getInventory().getItemInMainHand().getType();
