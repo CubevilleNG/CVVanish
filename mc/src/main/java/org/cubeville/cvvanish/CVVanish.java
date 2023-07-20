@@ -568,7 +568,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
         Bukkit.getScheduler().runTaskLater(this, () -> {
             long c = this.playerTeamConfigQueue.get(player.getUniqueId()) - 1;
             this.playerTeamConfigQueue.put(player.getUniqueId(), c);
-            System.out.println("Executing command: " + "pcmd teamoverride " + key + value + " player:" + player.getName());
+            //System.out.println("Executing command: " + "pcmd teamoverride " + key + value + " player:" + player.getName());
             Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "pcmd teamoverride " + key + value + " player:" + player.getName());
         }, 20 * i);
     }

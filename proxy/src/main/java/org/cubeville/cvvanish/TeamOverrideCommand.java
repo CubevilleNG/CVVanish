@@ -43,6 +43,8 @@ public class TeamOverrideCommand extends Command {
         }
         teamHandler.setPlayerTeamConfig(configKey, configValue, player);
         teamHandler.init(player);
-        commandSender.sendMessage(new TextComponent(configKey + ":" + configValue + " set for player:" + player.getName()));
+        if(commandSender instanceof ProxiedPlayer) {
+            commandSender.sendMessage(new TextComponent(configKey + ":" + configValue + " set for player:" + player.getName()));
+        }
     }
 }
