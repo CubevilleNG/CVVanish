@@ -56,6 +56,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
     private Set<UUID> nightvisionEnabledPlayers = new HashSet<>();
 
     private Set<UUID> godEnabledPlayers = new HashSet<>();
+    private Map<UUID, Set<UUID>> showPlayers = new HashMap<>();
 
     private Set<Material> interactDisallowedMaterials = new HashSet<>();
 
@@ -275,7 +276,12 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
             int separator = message.indexOf(":");
             if(separator == -1) throw new RuntimeException("Unparseable IPC message: " + message);
             String prefix = message.substring(0, separator);
-            UUID uuid = UUID.fromString(message.substring(separator + 1));
+            UUID uuid;
+            if(message.indexOf(":") != message.lastIndexOf(":")) {
+                uuid = UUID.fromString(message.substring(separator + 1, message.lastIndexOf(":")));
+            } else {
+                uuid = UUID.fromString(message.substring(separator + 1));
+            }
 
             if(prefix.equals("vi")) {
                 if(!invertedVisibility.contains(uuid)) {
@@ -322,6 +328,27 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
                 pickupInvertedPlayers.remove(uuid);
                 invertedVisibility.remove(uuid);
             }
+            else if(prefix.startsWith("showto")) {
+                Set<UUID> showList;
+                UUID source = UUID.fromString(message.substring(message.lastIndexOf(":") + 1));
+                if(showPlayers.containsKey(source)) {
+                    showList = showPlayers.get(source);
+                } else {
+                    showList = new HashSet<>();
+                }
+                showList.add(uuid);
+                showPlayers.put(source, showList);
+                updatePlayerForPlayer(source, uuid);
+            }
+            else if(prefix.startsWith("hidefrom")) {
+                UUID source = UUID.fromString(message.substring(message.lastIndexOf(":") + 1));
+                if(showPlayers.containsKey(source)) {
+                    Set<UUID> showList = showPlayers.get(source);
+                    showList.remove(uuid);
+                    showPlayers.put(source, showList);
+                    updatePlayerForPlayer(source, uuid);
+                }
+            }
             else {
                 throw new RuntimeException("Unparseable IPC message: " + message);
             }
@@ -349,7 +376,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
             for(Player p: Bukkit.getServer().getOnlinePlayers()) {
                 if(!p.getUniqueId().equals(uuid)) {
                     if(invis) {
-                        if(!p.hasPermission("cvvanish.override")) {
+                        if(!p.hasPermission("cvvanish.override") && !isPlayerShownToPlayer(player, p)) {
                             p.hidePlayer(this, player); // TODO: different signature in 1.15
                         }
                     }
@@ -368,6 +395,26 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
             }
 
         }
+    }
+
+    public void updatePlayerForPlayer(UUID source, UUID target) {
+        Player sourceP = Bukkit.getServer().getPlayer(source);
+        Player targetP = Bukkit.getServer().getPlayer(target);
+        if(sourceP != null && targetP != null) {
+            if(isPlayerInvisible(sourceP)) {
+                if(isPlayerShownToPlayer(sourceP, targetP)) {
+                    targetP.showPlayer(this, sourceP);
+                } else {
+                    targetP.hidePlayer(this, sourceP);
+                }
+            } else {
+                targetP.showPlayer(this, sourceP);
+            }
+        }
+    }
+
+    public boolean isPlayerShownToPlayer(Player source, Player target) {
+        return showPlayers.containsKey(source.getUniqueId()) && showPlayers.get(source.getUniqueId()).contains(target.getUniqueId());
     }
 
     public boolean isPlayerInvisible(Player player) {
@@ -398,12 +445,10 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
         if(isPlayerInvisible(player)) player.setSleepingIgnored(true);
         for(Player p: Bukkit.getServer().getOnlinePlayers()) { 
             if(!p.getUniqueId().equals(player.getUniqueId())) {
-                if(isPlayerInvisible(player) &&
-                   p.hasPermission("cvvanish.override") == false) {
+                if(isPlayerInvisible(player) && !p.hasPermission("cvvanish.override") && !isPlayerShownToPlayer(player, p)) {
                     p.hidePlayer(this, player);
                 }
-                if(player.hasPermission("cvvanish.override") == false &&
-                   isPlayerInvisible(p)) {
+                if(isPlayerInvisible(p) && !player.hasPermission("cvvanish.override") && !isPlayerShownToPlayer(p, player)) {
                     player.hidePlayer(this, p);
                 }
             }
@@ -491,6 +536,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
     public void onFoodLevelChange(FoodLevelChangeEvent event) {
         if(!(event.getEntity() instanceof Player)) return;
         Player player = (Player) event.getEntity();
+        if(player.getFoodLevel() < event.getFoodLevel()) return;
         if(isPlayerInvisible(player) || isPlayerGod(player))
             event.setCancelled(true);
     }

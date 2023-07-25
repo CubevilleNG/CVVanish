@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 
@@ -70,6 +71,16 @@ public class VCommand extends Command
                 else
                     player.sendMessage("§cNo permission.");
             }
+            else if(args[0].equals("showlist")) {
+                if(player.hasPermission("cvvanish.use.show")) {
+                    player.sendMessage(new TextComponent("§aPlayers that can see you:"));
+                    for(String p : plugin.getPlayersShownToPlayer(uuid)) {
+                        if(p != null) {
+                            player.sendMessage(new TextComponent("§a - §e" + p));
+                        }
+                    }
+                }
+            }
             else if(args[0].equals("help")) {
                 player.sendMessage("§c§lVanish Plugin Commands");
                 player.sendMessage("§6/v§r - §6§oToggles the player between visible, and the state they log on with (smod/admin: invisible, pickup/interact off | sa: vanish, pickup/interact off)");
@@ -135,6 +146,34 @@ public class VCommand extends Command
                 }
                 else
                     player.sendMessage("§cNo permission.");
+            }
+            else if(args[0].equals("showto") || args[0].equals("hidefrom")) {
+                if(player.hasPermission("cvvanish.use.show")) {
+                    UUID t = plugin.getPDM().getPlayerId(args[1]);
+                    if(t == null) {
+                        player.sendMessage(new TextComponent("§cInvalid player."));
+                        return;
+                    }
+                    UUID source = player.getUniqueId();
+                    UUID target = t;
+                    String message;
+                    if(args[0].equals("showto")) {
+                        if(!plugin.isPlayerShownToPlayer(source, target)) {
+                            message = "§aNow visible to §e" + args[1] + "§a.";
+                            plugin.addToPlayerShowList(source, target);
+                        } else {
+                            message = "§e" + args[1] + " §acan already see you.";
+                        }
+                    } else {
+                        if(plugin.isPlayerShownToPlayer(source, target)) {
+                            message = "§aYou are now hidden from §e" + args[1] + "§a.";
+                            plugin.removeFromPlayerShowList(source, target);
+                        } else {
+                            message = "§eYou are already hidden from §e" + args[1] + "§a.";
+                        }
+                    }
+                    player.sendMessage(new TextComponent(message));
+                }
             }
             else {
                 player.sendMessage("§cUnknown command!");

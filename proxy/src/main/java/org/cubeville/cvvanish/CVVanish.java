@@ -42,6 +42,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
     private Set<UUID> nightvisionEnabledPlayers = new CopyOnWriteArraySet<>();
 
     private Set<UUID> godPlayers = new CopyOnWriteArraySet<>();
+    private Map<UUID, Set<UUID>> showPlayers = new HashMap<>();
 
     private Set<UUID> actionBarPlayers = new CopyOnWriteArraySet<>();
     
@@ -95,7 +96,6 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         teamEnabledServers = new ArrayList<>();
         teamEnabledServers.add("cv7amongus");
         teamEnabledServers.add("cv7bedwars");
-        teamEnabledServers.add("oldserver");
         teamEnabledServers.add("ptown");
 
         playerDataManager = PlayerDataManager.getInstance();
@@ -385,6 +385,22 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
             }
         }
     }
+
+    public void setPlayerUnlistedStatus(UUID source, UUID target, boolean unlisted) {
+        ProxiedPlayer sourceP = ProxyServer.getInstance().getPlayer(source);
+        ProxiedPlayer targetP = ProxyServer.getInstance().getPlayer(target);
+        if(sourceP != null && targetP != null) {
+            if(unlisted) {
+                if(teamHandler.canSenderSeePlayerState(source, target)) {
+                    CVTabList.getInstanceFor(target).showPlayer(source);
+                } else {
+                    CVTabList.getInstanceFor(target).hidePlayer(source);
+                }
+            } else {
+                CVTabList.getInstanceFor(target).showPlayer(source);
+            }
+        }
+    }
     
     public void setPlayerInvisibilityStatus(UUID uuid, boolean invisible) {
         if(invisible != invisiblePlayers.contains(uuid)) {
@@ -434,6 +450,65 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
                 godPlayers.remove(uuid);
             sendPlayerGodStatusIPCMessage(uuid, null);
         }
+    }
+
+    public void showListSendTeams(UUID source) {
+        if(unlistedPlayers.contains(source)) {
+            teamHandler.sendVanishPacketToServer(teamHandler.getTeamPacket(teamManager.getPlayerTeam(source)), ProxyServer.getInstance().getPlayer(source));
+        } else if(invisiblePlayers.contains(source)) {
+            teamHandler.sendInvisiblePacketToServer(teamHandler.getTeamPacket(teamManager.getPlayerTeam(source)), ProxyServer.getInstance().getPlayer(source));
+        }
+    }
+
+    public void addToPlayerShowList(UUID source, UUID target) {
+        Set<UUID> showList;
+        if(showPlayers.containsKey(source)) {
+            showList = showPlayers.get(source);
+        } else {
+            showList = new HashSet<>();
+        }
+        showList.add(target);
+        showPlayers.put(source, showList);
+        if(connectedPlayers.contains(target)) {
+            sendPlayerShowListIPCMessage(source, target, null);
+            setPlayerUnlistedStatus(source, target, unlistedPlayers.contains(source));
+            showListSendTeams(source);
+            CVTabList.getInstanceFor(target).showPlayer(source);
+        }
+    }
+
+    public void removeFromPlayerShowList(UUID source, UUID target) {
+        if(showPlayers.containsKey(source)) {
+            Set<UUID> showList = showPlayers.get(source);
+            showList.remove(target);
+            showPlayers.put(source, showList);
+            if(connectedPlayers.contains(target)) {
+                sendPlayerShowListIPCMessage(source, target, null);
+                setPlayerUnlistedStatus(source, target, unlistedPlayers.contains(source));
+                showListSendTeams(source);
+                CVTabList.getInstanceFor(target).hidePlayer(source);
+            }
+        }
+    }
+
+    public boolean isPlayerShownToPlayer(UUID source, UUID target) {
+        return showPlayers.containsKey(source) && showPlayers.get(source).contains(target);
+    }
+
+    public List<String> getPlayersShownToPlayer(UUID source) {
+        List<String> showList = new ArrayList<>();
+        if(showPlayers.containsKey(source)) {
+            for(UUID uuid : showPlayers.get(source)) {
+                String p = playerDataManager.getPlayerName(uuid);
+                if(p != null) showList.add(p);
+            }
+        }
+        return showList;
+    }
+
+    private void sendPlayerShowListIPCMessage(UUID source, UUID target, String server) {
+        boolean show = showPlayers.containsKey(source) && showPlayers.get(source).contains(target);
+        sendPlayerStatusIPCMessage(source, (show ? "showto:" : "hidefrom:") + target, server);
     }
     
     private void sendPlayerVisibilityInvertedStatusIPCMessage(UUID uuid, String server) {

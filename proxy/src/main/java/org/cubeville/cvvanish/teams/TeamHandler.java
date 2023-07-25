@@ -367,7 +367,7 @@ public class TeamHandler {
     }
 
     public boolean canSenderSeePlayerState(UUID sender, UUID player) {
-        return plugin.getPDM().outranksOrEqual(sender, player);
+        return plugin.isPlayerShownToPlayer(player, sender) || plugin.getPDM().outranksOrEqual(sender, player);
     }
 
     public String[] getRank(ProxiedPlayer player) {
