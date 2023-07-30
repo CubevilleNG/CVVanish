@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -76,19 +77,9 @@ public class VCommand extends Command
                 else
                     player.sendMessage("§cNo permission.");
             }
-            else if(args[0].equals("showlist")) {
-                if(player.hasPermission("cvvanish.use.show")) {
-                    player.sendMessage(new TextComponent("§aPlayers that can see you:"));
-                    for(String p : plugin.getPlayersShownToPlayer(uuid)) {
-                        if(p != null) {
-                            TextComponent out = new TextComponent("§a - §e" + p);
-                            TextComponent click = new TextComponent(" §c(-)");
-                            click.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/hidefrom " + p));
-                            click.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("Remove " + p)));
-                            out.addExtra(click);
-                            player.sendMessage(out);
-                        }
-                    }
+            else if(args[0].equals("reveal")) {
+                if(player.hasPermission("cvvanish.use.reveal")) {
+                    player.sendMessage(new TextComponent(ChatColor.LIGHT_PURPLE + "Command usage: /reveal <list|add|remove> [player|group]"));
                 }
             }
             else if(args[0].equals("help")) {
@@ -157,69 +148,89 @@ public class VCommand extends Command
                 else
                     player.sendMessage("§cNo permission.");
             }
-            else if(args[0].equals("showto") || args[0].equals("hidefrom")) {
-                if(player.hasPermission("cvvanish.use.show")) {
-                    if(args[1].equalsIgnoreCase("admins")) {
-                        for(String p : plugin.getPDM().getPlayersByPriority(60)) {
-                            args[1] = p;
-                            processShowList(args, player, true);
-                        }
-                        if(args[0].equals("showto")) {
-                            player.sendMessage(new TextComponent("§aNow visible to admins"));
-                        } else {
-                            player.sendMessage(new TextComponent("§aYou are now hidden from admins"));
-                        }
-                    } else if(args[1].equalsIgnoreCase("smods")) {
-                        for(String p : plugin.getPDM().getPlayersByPriority(50)) {
-                            args[1] = p;
-                            processShowList(args, player, true);
-                        }
-                        if(args[0].equals("showto")) {
-                            player.sendMessage(new TextComponent("§aNow visible to smods"));
-                        } else {
-                            player.sendMessage(new TextComponent("§aYou are now hidden from smods"));
-                        }
-                    } else if(args[1].equalsIgnoreCase("mods")) {
-                        for(String p : plugin.getPDM().getPlayersByPriority(40)) {
-                            args[1] = p;
-                            processShowList(args, player, true);
-                        }
-                        if(args[0].equals("showto")) {
-                            player.sendMessage(new TextComponent("§aNow visible to mods"));
-                        } else {
-                            player.sendMessage(new TextComponent("§aYou are now hidden from mods"));
-                        }
-                    } else if(args[1].equalsIgnoreCase("staff")) {
-                        List<String> allStaff = new ArrayList<>();
-                        allStaff.addAll(plugin.getPDM().getPlayersByPriority(60));
-                        allStaff.addAll(plugin.getPDM().getPlayersByPriority(50));
-                        allStaff.addAll(plugin.getPDM().getPlayersByPriority(40));
-                        for(String p : allStaff) {
-                            args[1] = p;
-                            processShowList(args, player, true);
-                        }
-                        if(args[0].equals("showto")) {
-                            player.sendMessage(new TextComponent("§aNow visible to all staff"));
-                        } else {
-                            player.sendMessage(new TextComponent("§aYou are now hidden from all staff"));
-                        }
-                    } else if(args[1].equalsIgnoreCase("all")) {
-                        if(args[0].equals("hidefrom")) {
-                            for(String p : plugin.getPlayersShownToPlayer(player.getUniqueId())) {
-                                args[1] = p;
-                                processShowList(args, player, true);
-                            }
-                            player.sendMessage(new TextComponent("§aYou are now hidden from everyone"));
-                        } else {
-                            player.sendMessage(new TextComponent("§cYou can only use 'all' with the /hidefrom command!"));
-                        }
-                    } else {
-                        processShowList(args, player, false);
+            else if(args[0].equals("reveal") && args[1].equalsIgnoreCase("list")) {
+                player.sendMessage(new TextComponent("§aPlayers that can see you:"));
+                for(String p : plugin.getPlayersShownToPlayer(uuid)) {
+                    if(p != null) {
+                        TextComponent out = new TextComponent("§a - §e" + p);
+                        TextComponent click = new TextComponent(" §c(-)");
+                        click.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/reveal remove " + p));
+                        click.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("Remove " + p)));
+                        out.addExtra(click);
+                        player.sendMessage(out);
                     }
                 }
             }
             else {
                 player.sendMessage("§cUnknown command!");
+            }
+        } else if(args.length == 3) {
+            if(args[0].equals("reveal")) {
+                if(player.hasPermission("cvvanish.use.reveal")) {
+                    if(args[1].equalsIgnoreCase("add") || args[1].equalsIgnoreCase("+") || args[1].equalsIgnoreCase("remove") || args[1].equalsIgnoreCase("-")) {
+                        if(args[2].equalsIgnoreCase("admins")) {
+                            for(String p : plugin.getPDM().getPlayersByPriority(60)) {
+                                args[2] = p;
+                                processShowList(args, player, true);
+                            }
+                            if(args[1].equalsIgnoreCase("add") || args[1].equalsIgnoreCase("+")) {
+                                player.sendMessage(new TextComponent("§aNow visible to admins"));
+                            } else {
+                                player.sendMessage(new TextComponent("§aYou are now hidden from admins"));
+                            }
+                        } else if(args[2].equalsIgnoreCase("smods")) {
+                            for(String p : plugin.getPDM().getPlayersByPriority(50)) {
+                                args[2] = p;
+                                processShowList(args, player, true);
+                            }
+                            if(args[1].equalsIgnoreCase("add") || args[1].equalsIgnoreCase("+")) {
+                                player.sendMessage(new TextComponent("§aNow visible to smods"));
+                            } else {
+                                player.sendMessage(new TextComponent("§aYou are now hidden from smods"));
+                            }
+                        } else if(args[2].equalsIgnoreCase("mods")) {
+                            for(String p : plugin.getPDM().getPlayersByPriority(40)) {
+                                args[2] = p;
+                                processShowList(args, player, true);
+                            }
+                            if(args[1].equalsIgnoreCase("add") || args[1].equalsIgnoreCase("+")) {
+                                player.sendMessage(new TextComponent("§aNow visible to mods"));
+                            } else {
+                                player.sendMessage(new TextComponent("§aYou are now hidden from mods"));
+                            }
+                        } else if(args[2].equalsIgnoreCase("staff")) {
+                            List<String> allStaff = new ArrayList<>();
+                            allStaff.addAll(plugin.getPDM().getPlayersByPriority(60));
+                            allStaff.addAll(plugin.getPDM().getPlayersByPriority(50));
+                            allStaff.addAll(plugin.getPDM().getPlayersByPriority(40));
+                            for(String p : allStaff) {
+                                args[2] = p;
+                                processShowList(args, player, true);
+                            }
+                            if(args[1].equalsIgnoreCase("add") || args[1].equalsIgnoreCase("+")) {
+                                player.sendMessage(new TextComponent("§aNow visible to all staff"));
+                            } else {
+                                player.sendMessage(new TextComponent("§aYou are now hidden from all staff"));
+                            }
+                        } else if(args[2].equalsIgnoreCase("all")) {
+                            if(args[1].equalsIgnoreCase("remove") || args[1].equalsIgnoreCase("-")) {
+                                for(String p : plugin.getPlayersShownToPlayer(player.getUniqueId())) {
+                                    args[2] = p;
+                                    processShowList(args, player, true);
+                                }
+                                player.sendMessage(new TextComponent("§aYou are now hidden from everyone"));
+                            } else {
+                                player.sendMessage(new TextComponent("§cYou can only use 'all' with the /reveal remove command!"));
+                            }
+                        } else {
+                            processShowList(args, player, false);
+                        }
+                    } else {
+                        player.sendMessage(new TextComponent("§cUnknown command!"));
+                    }
+                }
+            } else {
+                player.sendMessage(new TextComponent("§cUnknown command!"));
             }
         }
 
@@ -242,7 +253,7 @@ public class VCommand extends Command
         
     }
     public void processShowList(String[] args, ProxiedPlayer player, boolean group) {
-        UUID t = plugin.getPDM().getPlayerId(args[1]);
+        UUID t = plugin.getPDM().getPlayerId(args[2]);
         if(t == null) {
             player.sendMessage(new TextComponent("§cInvalid player."));
             return;
@@ -250,19 +261,28 @@ public class VCommand extends Command
         UUID source = player.getUniqueId();
         UUID target = t;
         String message;
-        if(args[0].equals("showto")) {
+        if(args[1].equalsIgnoreCase("add") || args[1].equalsIgnoreCase("+")) {
             if(!plugin.isPlayerShownToPlayer(source, target)) {
-                message = "§aNow visible to §e" + args[1] + "§a.";
-                plugin.addToPlayerShowList(source, target);
+                if(!group && plugin.getPDM().getPriority(target) < 40) {
+                    if(player.hasPermission("cvvanish.use.reveal.any")) {
+                        message = "§aNow visible to §e" + args[2] + "§a.";
+                        plugin.addToPlayerShowList(source, target);
+                    } else {
+                        message = "§cYou do not have permission to use this command on Citizens";
+                    }
+                } else {
+                    message = "§aNow visible to §e" + args[2] + "§a.";
+                    plugin.addToPlayerShowList(source, target);
+                }
             } else {
-                message = "§e" + args[1] + " §acan already see you.";
+                message = "§e" + args[2] + " §acan already see you.";
             }
         } else {
             if(plugin.isPlayerShownToPlayer(source, target)) {
-                message = "§aYou are now hidden from §e" + args[1] + "§a.";
+                message = "§aYou are now hidden from §e" + args[2] + "§a.";
                 plugin.removeFromPlayerShowList(source, target);
             } else {
-                message = "§eYou are already hidden from §e" + args[1] + "§a.";
+                message = "§eYou are already hidden from §e" + args[2] + "§a.";
             }
         }
         if(!group) player.sendMessage(new TextComponent(message));
