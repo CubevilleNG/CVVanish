@@ -17,6 +17,8 @@ import com.comphenix.protocol.wrappers.WrappedDataValue;
 import com.comphenix.protocol.wrappers.WrappedDataWatcher;
 import com.comphenix.protocol.wrappers.WrappedWatchableObject;
 import org.bukkit.*;
+import org.bukkit.block.Block;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
@@ -27,11 +29,13 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockReceiveGameEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.*;
 import org.bukkit.event.world.GenericGameEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.material.MaterialData;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -98,6 +102,10 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
         interactDisallowedMaterials.add(Material.MANGROVE_PRESSURE_PLATE);
         interactDisallowedMaterials.add(Material.BAMBOO_PRESSURE_PLATE);
         interactDisallowedMaterials.add(Material.CHERRY_PRESSURE_PLATE);
+        interactDisallowedMaterials.add(Material.SCULK_SENSOR);
+        interactDisallowedMaterials.add(Material.CALIBRATED_SCULK_SENSOR);
+        interactDisallowedMaterials.add(Material.SCULK_SHRIEKER);
+        interactDisallowedMaterials.add(Material.BIG_DRIPLEAF);
 
         collarMappings.put(Material.WHITE_DYE, DyeColor.WHITE);
         collarMappings.put(Material.LIGHT_GRAY_DYE, DyeColor.LIGHT_GRAY);
@@ -579,10 +587,21 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
     public void onSculkSensorActivate(GenericGameEvent event) {
         if(event.getEntity() == null) return;
         if(!(event.getEntity() instanceof Player)) return;
-        if(isPlayerInteractDisabled((Player) event.getEntity())) {
-            event.setCancelled(true);
-        }
+        if(isPlayerInteractDisabled((Player) event.getEntity())) event.setCancelled(true);
     }
+
+    /*@EventHandler(priority = EventPriority.HIGHEST)
+    public void onEntityChangeBlock(EntityChangeBlockEvent event) {
+        if(!(event.getEntity() instanceof Player)) return;
+        Material mat = event.getBlock().getType();
+        if(!mat.equals(Material.REDSTONE_ORE) && !mat.equals(Material.DEEPSLATE_REDSTONE_ORE)) return;
+        String bd = event.getBlockData().getAsString();
+        if(!bd.contains("lit=true")) return;
+        if(isPlayerInteractDisabled((Player) event.getEntity())) {
+            BlockData newData = Bukkit.createBlockData(event.getBlock().getType());
+            event.getBlock().setBlockData(newData);
+        }
+    }*/
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onWorldChange(PlayerChangedWorldEvent event) {
