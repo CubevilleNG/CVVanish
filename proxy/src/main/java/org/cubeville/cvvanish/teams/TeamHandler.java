@@ -354,6 +354,7 @@ public class TeamHandler {
 
     public net.md_5.bungee.protocol.packet.Team createNewTeamPacket(net.md_5.bungee.protocol.packet.Team oldTeam) {
         net.md_5.bungee.protocol.packet.Team newTeam = new net.md_5.bungee.protocol.packet.Team();
+        newTeam.setMode(oldTeam.getMode());
         newTeam.setName(oldTeam.getName());
         newTeam.setDisplayName(oldTeam.getDisplayName());
         newTeam.setPrefix(oldTeam.getPrefix());
