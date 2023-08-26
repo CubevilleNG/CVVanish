@@ -247,6 +247,11 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
         if(entity.getType().equals(EntityType.WOLF)) {
             if(item.equals(Material.AIR)) {
                 ((Wolf) entity).setSitting(!((Wolf) entity).isSitting());
+            } else if(item.equals(Material.NAME_TAG)) {
+                entity.setCustomName(e.getPlayer().getInventory().getItemInMainHand().getItemMeta().getDisplayName());
+                ItemStack nametag = e.getPlayer().getInventory().getItemInMainHand();
+                nametag.setAmount(nametag.getAmount() - 1);
+                e.getPlayer().getInventory().setItemInMainHand(nametag);
             } else if(collarMappings.containsKey(item)) {
                 ((Wolf) entity).setCollarColor(collarMappings.get(item));
                 ItemStack dye = e.getPlayer().getInventory().getItemInMainHand();
@@ -261,6 +266,11 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
         } else if(entity.getType().equals(EntityType.CAT)) {
             if(item.equals(Material.AIR)) {
                 ((Cat) entity).setSitting(!((Cat) entity).isSitting());
+            } else if(item.equals(Material.NAME_TAG)) {
+                entity.setCustomName(e.getPlayer().getInventory().getItemInMainHand().getItemMeta().getDisplayName());
+                ItemStack nametag = e.getPlayer().getInventory().getItemInMainHand();
+                nametag.setAmount(nametag.getAmount() - 1);
+                e.getPlayer().getInventory().setItemInMainHand(nametag);
             } else if(collarMappings.containsKey(item)) {
                 ((Cat) entity).setCollarColor(collarMappings.get(item));
                 ItemStack dye = e.getPlayer().getInventory().getItemInMainHand();
@@ -275,6 +285,11 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
         } else if(entity.getType().equals(EntityType.PARROT)) {
             if(item.equals(Material.AIR)) {
                 if(entity.isOnGround()) ((Parrot) entity).setSitting(!((Parrot) entity).isSitting());
+            } else if(item.equals(Material.NAME_TAG)) {
+                entity.setCustomName(e.getPlayer().getInventory().getItemInMainHand().getItemMeta().getDisplayName());
+                ItemStack nametag = e.getPlayer().getInventory().getItemInMainHand();
+                nametag.setAmount(nametag.getAmount() - 1);
+                e.getPlayer().getInventory().setItemInMainHand(nametag);
             }
         }
     }

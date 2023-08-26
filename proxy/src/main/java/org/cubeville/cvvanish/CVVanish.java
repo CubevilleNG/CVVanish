@@ -200,6 +200,12 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
             }
         }
 
+        for(UUID source : showPlayers.keySet()) {
+            if(showPlayers.get(source).contains(p.getUniqueId())) {
+                sendPlayerShowListIPCMessage(source, p.getUniqueId(), event.getPlayer().getServer().getInfo().getName());
+            }
+        }
+
         //TODO this ensures the player has been connected for less than 10 seconds
         if((System.currentTimeMillis() / 1000L) - loginTime.get(event.getPlayer().getUniqueId()) < 10) addPacketAvailable(event.getPlayer().getUniqueId());
     }
