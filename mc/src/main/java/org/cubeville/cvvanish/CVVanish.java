@@ -9,16 +9,11 @@ import java.util.*;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
-import com.comphenix.protocol.events.ListenerPriority;
-import com.comphenix.protocol.events.PacketAdapter;
-import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.events.PacketEvent;
+import com.comphenix.protocol.events.*;
 import com.comphenix.protocol.wrappers.WrappedDataValue;
 import com.comphenix.protocol.wrappers.WrappedDataWatcher;
 import com.comphenix.protocol.wrappers.WrappedWatchableObject;
 import org.bukkit.*;
-import org.bukkit.block.Block;
-import org.bukkit.block.data.BlockData;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
@@ -29,13 +24,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.block.BlockReceiveGameEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.*;
 import org.bukkit.event.world.GenericGameEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.material.MaterialData;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -106,6 +99,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
         interactDisallowedMaterials.add(Material.CALIBRATED_SCULK_SENSOR);
         interactDisallowedMaterials.add(Material.SCULK_SHRIEKER);
         interactDisallowedMaterials.add(Material.BIG_DRIPLEAF);
+        interactDisallowedMaterials.add(Material.TRIPWIRE);
 
         collarMappings.put(Material.WHITE_DYE, DyeColor.WHITE);
         collarMappings.put(Material.LIGHT_GRAY_DYE, DyeColor.LIGHT_GRAY);
@@ -123,8 +117,6 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
         collarMappings.put(Material.PURPLE_DYE, DyeColor.PURPLE);
         collarMappings.put(Material.MAGENTA_DYE, DyeColor.MAGENTA);
         collarMappings.put(Material.PINK_DYE, DyeColor.PINK);
-
-        interactDisallowedMaterials.add(Material.TRIPWIRE);
         
         nightVisionUpdater = new Runnable() {
                 public void run() {
@@ -193,29 +185,19 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
             public void onPacketSending(PacketEvent event) {
                 if(event.isCancelled()) return;
                 if(event.getPacketType() != PacketType.Play.Server.ENTITY_METADATA) return;
-
                 final PacketContainer packet = event.getPacket();
                 final Entity entity = packet.getEntityModifier(event).read(0);
-
                 if(entity == null) return;
                 if(WrappedDataWatcher.getEntityWatcher(entity).getObject(18) == null) return;
                 if(!(WrappedDataWatcher.getEntityWatcher(entity).getObject(18) instanceof Optional)) return;
-
                 final WrappedDataWatcher dataWatcher = WrappedDataWatcher.getEntityWatcher(entity).deepClone();
-
                 final WrappedDataWatcher.Serializer uuidSerializer = WrappedDataWatcher.Registry.getUUIDSerializer(true);
-
                 final WrappedDataWatcher.WrappedDataWatcherObject optUUIDFieldWatcher = new WrappedDataWatcher.WrappedDataWatcherObject(18, uuidSerializer);
-
                 final Optional<Object> optUUIDField = Optional.empty();
-
                 dataWatcher.setObject(optUUIDFieldWatcher, optUUIDField);
-
                 final List<WrappedDataValue> wrappedDataValueList = new ArrayList<>();
-
                 for(final WrappedWatchableObject entry : dataWatcher.getWatchableObjects()) {
                     if(entry == null) continue;
-
                     final WrappedDataWatcher.WrappedDataWatcherObject watcherObject = entry.getWatcherObject();
                     wrappedDataValueList.add(
                             new WrappedDataValue(
@@ -225,9 +207,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
                             )
                     );
                 }
-
                 packet.getDataValueCollectionModifier().write(0, wrappedDataValueList);
-
                 event.setPacket(packet);
             }
         });
