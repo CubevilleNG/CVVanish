@@ -1,21 +1,21 @@
 package org.cubeville.cvvanish.teams;
 
+import net.md_5.bungee.UserConnection;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.score.Team;
-import net.md_5.bungee.chat.ComponentSerializer;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
+import net.md_5.bungee.protocol.Either;
 import org.cubeville.cvvanish.CVVanish;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 public class TeamHandler {
 
@@ -127,38 +127,76 @@ public class TeamHandler {
             newTeam.setMode((byte) 0);
             ProxiedPlayer p = ProxyServer.getInstance().getPlayer(teamManager.getRealNameUUID((String) team.getPlayers().toArray()[0]));
             if(p != null) {
-                String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(newTeam.getPrefix()));
+                String oldPrefix = newTeam.getPrefix().getRight().toLegacyText();
+                //String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(newTeam.getPrefix()));
                 String color = oldPrefix.substring(oldPrefix.indexOf("#"), oldPrefix.indexOf("#") + 7);
                 oldPrefix = oldPrefix.substring(oldPrefix.indexOf("#") + 7);
                 if(plugin.isPlayerUnlisted(p.getUniqueId())) {
                     //System.out.println(p.getName() + " is unlisted");
                     if(canSenderSeePlayerState(player.getUniqueId(), p.getUniqueId())) {
                         String newPrefix = ChatColor.of(color) + "§m" + oldPrefix;
-                        newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
-                        player.unsafe().sendPacket(newTeam);
+                        newTeam.setPrefix(Either.right(TextComponent.fromLegacy(newPrefix)));
+                        //newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
+                        if(player.getPendingConnection().getVersion() >= 764) {
+                            try {
+                                ((UserConnection) player).sendPacketQueued(newTeam);
+                            } catch (Exception ignored) {
+
+                            }
+                        } else {
+                            player.unsafe().sendPacket(newTeam);
+                        }
                         //System.out.println("sending strikethrough packet of " + p.getName() + " to " + player.getName());
                     }
                 } else if(plugin.isPlayerInvisible(p.getUniqueId())) {
                     //System.out.println(p.getName() + " is invisible");
                     if(canSenderSeePlayerState(player.getUniqueId(), p.getUniqueId())) {
-                        newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + "§o" + oldPrefix)));
+                        newTeam.setPrefix(Either.right(TextComponent.fromLegacy(ChatColor.of(color) + "§o" + oldPrefix)));
+                        //newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + "§o" + oldPrefix)));
                         //System.out.println("sending italics packet of " + p.getName() + " to " + player.getName());
                     } else {
-                        newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + oldPrefix)));
+                        newTeam.setPrefix(Either.right(TextComponent.fromLegacy(ChatColor.of(color) + oldPrefix)));
+                        //newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + oldPrefix)));
                         //System.out.println("sending normal packet of " + p.getName() + " to " + player.getName());
                     }
-                    player.unsafe().sendPacket(newTeam);
+                    if(player.getPendingConnection().getVersion() >= 764) {
+                        try {
+                            ((UserConnection) player).sendPacketQueued(newTeam);
+                        } catch (Exception ignored) {
+
+                        }
+                    } else {
+                        player.unsafe().sendPacket(newTeam);
+                    }
                 } else if(p.hasPermission("cvvanish.prefix.helper") && !modOrHigher(p)){
                     if(!player.hasPermission("cvvanish.prefix.helper") && !modOrHigher(player)) {
                         color = "#FFFFFF";
                         newTeam.setName("0" + newTeam.getName().substring(1));
                     }
-                    newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + oldPrefix)));
-                    player.unsafe().sendPacket(newTeam);
+                    newTeam.setPrefix(Either.right(TextComponent.fromLegacy(ChatColor.of(color) + oldPrefix)));
+                    //newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + oldPrefix)));
+                    if(player.getPendingConnection().getVersion() >= 764) {
+                        try {
+                            ((UserConnection) player).sendPacketQueued(newTeam);
+                        } catch (Exception ignored) {
+
+                        }
+                    } else {
+                        player.unsafe().sendPacket(newTeam);
+                    }
                 } else {
                     //System.out.println(p.getName() + " is neither invisible nor unlisted");
-                    newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + oldPrefix)));
-                    player.unsafe().sendPacket(newTeam);
+                    newTeam.setPrefix(Either.right(TextComponent.fromLegacy(ChatColor.of(color) + oldPrefix)));
+                    //newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + oldPrefix)));
+                    if(player.getPendingConnection().getVersion() >= 764) {
+                        try {
+                            ((UserConnection) player).sendPacketQueued(newTeam);
+                        } catch (Exception ignored) {
+
+                        }
+                    } else {
+                        player.unsafe().sendPacket(newTeam);
+                    }
                     //System.out.println("sending normal packet of " + p.getName() + " to " + player.getName());
                 }
             }
@@ -179,27 +217,55 @@ public class TeamHandler {
                 team.setCollisionRule(teamConfig.get("collision"));
                 team.setNameTagVisibility(teamConfig.get("nametags"));
                 net.md_5.bungee.protocol.packet.Team newTeam = createNewTeamPacket(team);
-                String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(newTeam.getPrefix()));
+                String oldPrefix = newTeam.getPrefix().getRight().toLegacyText();
+                //String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(newTeam.getPrefix()));
                 String color = oldPrefix.substring(oldPrefix.indexOf("#"), oldPrefix.indexOf("#") + 7);
                 oldPrefix = oldPrefix.substring(oldPrefix.indexOf("#") + 7);
                 if(plugin.isPlayerUnlisted(player.getUniqueId())) {
                     //System.out.println(player.getName() + " is unlisted");
                     if(canSenderSeePlayerState(p.getUniqueId(), player.getUniqueId())) {
                         String newPrefix = ChatColor.of(color) + "§m" + oldPrefix;
-                        newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
-                        p.unsafe().sendPacket(newTeam);
+                        newTeam.setPrefix(Either.right(TextComponent.fromLegacy(newPrefix)));
+                        //newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
+                        if(p.getPendingConnection().getVersion() >= 764) {
+                            try {
+                                ((UserConnection) p).sendPacketQueued(newTeam);
+                            } catch (Exception ignored) {
+
+                            }
+                        } else {
+                            p.unsafe().sendPacket(newTeam);
+                        }
                         //System.out.println("sending strikethrough packet of " + player.getName() + " to " + p.getName());
                     }
                 } else if(plugin.isPlayerInvisible(player.getUniqueId())) {
                     //System.out.println(player.getName() + " is invisible");
                     if(canSenderSeePlayerState(p.getUniqueId(), player.getUniqueId())) {
                         String newPrefix = ChatColor.of(color) + "§o" + oldPrefix;
-                        newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
-                        p.unsafe().sendPacket(newTeam);
+                        newTeam.setPrefix(Either.right(TextComponent.fromLegacy(newPrefix)));
+                        //newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
+                        if(p.getPendingConnection().getVersion() >= 764) {
+                            try {
+                                ((UserConnection) p).sendPacketQueued(newTeam);
+                            } catch (Exception ignored) {
+
+                            }
+                        } else {
+                            p.unsafe().sendPacket(newTeam);
+                        }
                         //System.out.println("sending italics packet of " + player.getName() + " to " + p.getName());
                     } else {
-                        newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + oldPrefix)));
-                        p.unsafe().sendPacket(newTeam);
+                        newTeam.setPrefix(Either.right(TextComponent.fromLegacy(ChatColor.of(color) + oldPrefix)));
+                        //newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + oldPrefix)));
+                        if(p.getPendingConnection().getVersion() >= 764) {
+                            try {
+                                ((UserConnection) p).sendPacketQueued(newTeam);
+                            } catch (Exception ignored) {
+
+                            }
+                        } else {
+                            p.unsafe().sendPacket(newTeam);
+                        }
                         //System.out.println("sending normal packet of " + player.getName() + " to " + p.getName());
                         //System.out.println("normal packet prefix is " + newTeam.getPrefix());
                     }
@@ -208,12 +274,30 @@ public class TeamHandler {
                         color = "#FFFFFF";
                         newTeam.setName("0" + newTeam.getName().substring(1));
                     }
-                    newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + oldPrefix)));
-                    p.unsafe().sendPacket(newTeam);
+                    newTeam.setPrefix(Either.right(TextComponent.fromLegacy(ChatColor.of(color) + oldPrefix)));
+                    //newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + oldPrefix)));
+                    if(p.getPendingConnection().getVersion() >= 764) {
+                        try {
+                            ((UserConnection) p).sendPacketQueued(newTeam);
+                        } catch (Exception ignored) {
+
+                        }
+                    } else {
+                        p.unsafe().sendPacket(newTeam);
+                    }
                 } else {
                     //System.out.println(player.getName() + " is neither invisible nor unlisted");
-                    newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + oldPrefix)));
-                    p.unsafe().sendPacket(newTeam);
+                    newTeam.setPrefix(Either.right(TextComponent.fromLegacy(ChatColor.of(color) + oldPrefix)));
+                    //newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + oldPrefix)));
+                    if(p.getPendingConnection().getVersion() >= 764) {
+                        try {
+                            ((UserConnection) p).sendPacketQueued(newTeam);
+                        } catch (Exception ignored) {
+
+                        }
+                    } else {
+                        p.unsafe().sendPacket(newTeam);
+                    }
                     //System.out.println("sending normal packet of " + player.getName() + " to " + p.getName());
                 }
             }
@@ -224,7 +308,15 @@ public class TeamHandler {
         for(Team t : teamManager.getAllTeams()) {
             net.md_5.bungee.protocol.packet.Team team = getTeamPacket(t);
             team.setMode((byte) 1);
-            player.unsafe().sendPacket(team);
+            if(player.getPendingConnection().getVersion() >= 764) {
+                try {
+                    ((UserConnection) player).sendPacketQueued(team);
+                } catch (Exception ignored) {
+
+                }
+            } else {
+                player.unsafe().sendPacket(team);
+            }
         }
     }
 
@@ -232,7 +324,15 @@ public class TeamHandler {
         team.setMode((byte) 1);
         for(UUID uuid : plugin.getConnectedPlayers()) {
             ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
-            p.unsafe().sendPacket(team);
+            if(p.getPendingConnection().getVersion() >= 764) {
+                try {
+                    ((UserConnection) p).sendPacketQueued(team);
+                } catch (Exception ignored) {
+
+                }
+            } else {
+                p.unsafe().sendPacket(team);
+            }
         }
     }
 
@@ -242,11 +342,27 @@ public class TeamHandler {
             if(unlisted) {
                 if(canSenderSeePlayerState(uuid, player)) {
                     ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
-                    p.unsafe().sendPacket(team);
+                    if(p.getPendingConnection().getVersion() >= 764) {
+                        try {
+                            ((UserConnection) p).sendPacketQueued(team);
+                        } catch (Exception ignored) {
+
+                        }
+                    } else {
+                        p.unsafe().sendPacket(team);
+                    }
                 }
             } else {
                 ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
-                p.unsafe().sendPacket(team);
+                if(p.getPendingConnection().getVersion() >= 764) {
+                    try {
+                        ((UserConnection) p).sendPacketQueued(team);
+                    } catch (Exception ignored) {
+
+                    }
+                } else {
+                    p.unsafe().sendPacket(team);
+                }
             }
         }
     }
@@ -266,14 +382,32 @@ public class TeamHandler {
             ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
             net.md_5.bungee.protocol.packet.Team newTeam = createNewTeamPacket(team);
             if(canSenderSeePlayerState(p.getUniqueId(), player.getUniqueId())) {
-                p.unsafe().sendPacket(newTeam);
+                if(p.getPendingConnection().getVersion() >= 764) {
+                    try {
+                        ((UserConnection) p).sendPacketQueued(newTeam);
+                    } catch (Exception ignored) {
+
+                    }
+                } else {
+                    p.unsafe().sendPacket(newTeam);
+                }
             }
-            String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(newTeam.getPrefix()));
+            String oldPrefix = newTeam.getPrefix().getRight().toLegacyText();
+            //String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(newTeam.getPrefix()));
             String color = oldPrefix.substring(oldPrefix.indexOf("#"), oldPrefix.indexOf("#") + 7);
             oldPrefix = oldPrefix.substring(oldPrefix.indexOf("#") + 7);
-            newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + oldPrefix)));
+            newTeam.setPrefix(Either.right(TextComponent.fromLegacy(ChatColor.of(color) + oldPrefix)));
+            //newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + oldPrefix)));
             newTeam.setMode((byte) 0);
-            p.unsafe().sendPacket(newTeam);
+            if(p.getPendingConnection().getVersion() >= 764) {
+                try {
+                    ((UserConnection) p).sendPacketQueued(newTeam);
+                } catch (Exception ignored) {
+
+                }
+            } else {
+                p.unsafe().sendPacket(newTeam);
+            }
             //System.out.println("sending normal packet of " + player.getName() + " to " + p.getName());
         }
     }
@@ -292,21 +426,40 @@ public class TeamHandler {
             team.setNameTagVisibility(teamConfig.get("nametags"));
             net.md_5.bungee.protocol.packet.Team newTeam = createNewTeamPacket(team);
             ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
-            String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(team.getPrefix()));
+            String oldPrefix = team.getPrefix().getRight().toLegacyText();
+            //String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(team.getPrefix()));
             String color = oldPrefix.substring(oldPrefix.indexOf("#"), oldPrefix.indexOf("#") + 7);
             oldPrefix = oldPrefix.substring(oldPrefix.indexOf("#") + 7);
             if(canSenderSeePlayerState(p.getUniqueId(), player.getUniqueId())) {
                 newTeam.setMode((byte) 1);
-                p.unsafe().sendPacket(newTeam);
+                if(p.getPendingConnection().getVersion() >= 764) {
+                    try {
+                        ((UserConnection) p).sendPacketQueued(newTeam);
+                    } catch (Exception ignored) {
+
+                    }
+                } else {
+                    p.unsafe().sendPacket(newTeam);
+                }
                 String newPrefix = ChatColor.of(color) + "§o" + oldPrefix;
-                newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
+                newTeam.setPrefix(Either.right(TextComponent.fromLegacy(newPrefix)));
+                //newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
                 //System.out.println("sending italics packet of " + player.getName() + " to " + p.getName());
             } else {
-                newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + oldPrefix)));
+                newTeam.setPrefix(Either.right(TextComponent.fromLegacy(ChatColor.of(color) + oldPrefix)));
+                //newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + oldPrefix)));
                 //System.out.println("sending normal packet of " + player.getName() + " to " + p.getName());
             }
             newTeam.setMode((byte) 0);
-            p.unsafe().sendPacket(newTeam);
+            if(p.getPendingConnection().getVersion() >= 764) {
+                try {
+                    ((UserConnection) p).sendPacketQueued(newTeam);
+                } catch (Exception ignored) {
+
+                }
+            } else {
+                p.unsafe().sendPacket(newTeam);
+            }
         }
     }
 
@@ -324,14 +477,32 @@ public class TeamHandler {
             team.setNameTagVisibility(teamConfig.get("nametags"));
             net.md_5.bungee.protocol.packet.Team newTeam = createNewTeamPacket(team);
             ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
-            p.unsafe().sendPacket(newTeam);
+            if(p.getPendingConnection().getVersion() >= 764) {
+                try {
+                    ((UserConnection) p).sendPacketQueued(newTeam);
+                } catch (Exception ignored) {
+
+                }
+            } else {
+                p.unsafe().sendPacket(newTeam);
+            }
             if(canSenderSeePlayerState(p.getUniqueId(), player.getUniqueId())) {
-                String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(team.getPrefix()));
+                String oldPrefix = team.getPrefix().getRight().toLegacyText();
+                //String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(team.getPrefix()));
                 String color = oldPrefix.substring(oldPrefix.indexOf("#"), oldPrefix.indexOf("#") + 7);
                 oldPrefix = oldPrefix.substring(oldPrefix.indexOf("#") + 7);
-                newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + "§m" + oldPrefix)));
+                newTeam.setPrefix(Either.right(TextComponent.fromLegacy(ChatColor.of(color) + "§m" + oldPrefix)));
+                //newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + "§m" + oldPrefix)));
                 newTeam.setMode((byte) 0);
-                p.unsafe().sendPacket(newTeam);
+                if(p.getPendingConnection().getVersion() >= 764) {
+                    try {
+                        ((UserConnection) p).sendPacketQueued(newTeam);
+                    } catch (Exception ignored) {
+
+                    }
+                } else {
+                    p.unsafe().sendPacket(newTeam);
+                }
                 //System.out.println("sending strikethrough packet of " + player.getName() + " to " + p.getName());
             }
         }
@@ -340,9 +511,13 @@ public class TeamHandler {
     public net.md_5.bungee.protocol.packet.Team getTeamPacket(Team team) {
         net.md_5.bungee.protocol.packet.Team newTeam = new net.md_5.bungee.protocol.packet.Team();
         newTeam.setName(team.getName());
-        newTeam.setDisplayName(ComponentSerializer.toString(TextComponent.fromLegacyText(team.getDisplayName())));
-        newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(team.getPrefix())));
-        newTeam.setSuffix(ComponentSerializer.toString(TextComponent.fromLegacyText(team.getSuffix())));
+        newTeam.setDisplayName(Either.right(TextComponent.fromLegacy(team.getDisplayName()).getExtra().get(0)));
+        newTeam.setPrefix(Either.right(TextComponent.fromLegacy(team.getPrefix()).getExtra().get(0)));
+        newTeam.setSuffix(Either.right(TextComponent.fromLegacy(team.getSuffix()).getExtra().get(0)));
+
+        //newTeam.setDisplayName(ComponentSerializer.toString(TextComponent.fromLegacyText(team.getDisplayName())));
+        //newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(team.getPrefix())));
+        //newTeam.setSuffix(ComponentSerializer.toString(TextComponent.fromLegacyText(team.getSuffix())));
         newTeam.setCollisionRule(team.getCollisionRule());
         newTeam.setFriendlyFire(team.getFriendlyFire());
         newTeam.setNameTagVisibility(team.getNameTagVisibility());

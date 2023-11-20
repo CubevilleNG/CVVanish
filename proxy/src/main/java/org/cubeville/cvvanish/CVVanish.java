@@ -8,7 +8,6 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 import net.md_5.bungee.UserConnection;
 import net.md_5.bungee.api.ProxyServer;
-import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.PlayerDisconnectEvent;
 import net.md_5.bungee.api.event.PostLoginEvent;
@@ -22,6 +21,7 @@ import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.YamlConfiguration;
 import net.md_5.bungee.event.EventHandler;
 
+import net.md_5.bungee.protocol.Property;
 import org.cubeville.cvipc.CVIPC;
 import org.cubeville.cvipc.IPCInterface;
 
@@ -59,6 +59,8 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
     public PlayerDataManager playerDataManager;
 
     public List<String> teamEnabledServers;
+
+    public Map<UUID, String[]> playerSkinTextures;
     
     @Override
     public void onEnable() {
@@ -97,6 +99,8 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         teamEnabledServers.add("cv7amongus");
         teamEnabledServers.add("cv7bedwars");
         teamEnabledServers.add("ptown");
+
+        playerSkinTextures = new HashMap<>();
 
         playerDataManager = PlayerDataManager.getInstance();
     }

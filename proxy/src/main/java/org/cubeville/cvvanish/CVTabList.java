@@ -5,9 +5,11 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.ConcurrentHashMap;
 
+import net.md_5.bungee.UserConnection;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
+import net.md_5.bungee.protocol.Property;
 import net.md_5.bungee.protocol.packet.PlayerListItem;
 import net.md_5.bungee.protocol.packet.PlayerListItemRemove;
 import net.md_5.bungee.protocol.packet.PlayerListItemUpdate;
@@ -181,39 +183,75 @@ public class CVTabList extends TabList
                 item.setGamemode(1);
             }
             item.setPing(0);
+            //if(plugin.playerSkins.containsKey(item.getUuid())) item.setProperties(plugin.playerSkins.get(item.getUuid()));
             PlayerListItem.Item items[] = new PlayerListItem.Item[1];
             items[0] = item;
             playerListItem.setItems(items);
-            player.unsafe().sendPacket(playerListItem);
+            if(player.getPendingConnection().getVersion() >= 764) {
+                try {
+                    ((UserConnection) player).sendPacketQueued(playerListItem);
+                } catch (Exception ignored) {
+
+                }
+            } else {
+                player.unsafe().sendPacket(playerListItem);
+            }
         } else {
             if(action.equals(PlayerListItem.Action.ADD_PLAYER)) {
-                PlayerListItemUpdate playerListItemUpdate = new PlayerListItemUpdate();
-                PlayerListItem.Item items[] = new PlayerListItem.Item[1];
-                if(item.getListed() == null) {
-                    item.setListed(true);
-                }
-                item.setPublicKey(null);
-                if(!item.getUuid().equals(player.getUniqueId())) {
-                    item.setGamemode(1);
-                } else if(item.getGamemode() != null) {
+                if(!plugin.getConnectedPlayers().contains(item.getUuid()) || plugin.playerSkinTextures.containsKey(item.getUuid())) {
+                    PlayerListItemUpdate playerListItemUpdate = new PlayerListItemUpdate();
+                    PlayerListItem.Item items[] = new PlayerListItem.Item[1];
+                    if(item.getListed() == null) {
+                        item.setListed(true);
+                    }
+                    item.setPublicKey(null);
+                    if(!item.getUuid().equals(player.getUniqueId())) {
+                        item.setGamemode(1);
+                    } else if(item.getGamemode() != null) {
 
                 /*} else if(playerAddPackets.get(item.getUuid()) != null) {
                     item.setGamemode(playerAddPackets.get(item.getUuid()).getGamemode());*/
-                } else {
-                    item.setGamemode(1);
+                    } else {
+                        item.setGamemode(1);
+                    }
+                    item.setPing(0);
+                    if(plugin.playerSkinTextures.containsKey(item.getUuid())) {
+                        Property[] propArray = new Property[1];
+                        String[] props = plugin.playerSkinTextures.get(item.getUuid());
+                        propArray[0] = new Property("textures", props[0], props[1]);
+                        item.setProperties(propArray);
+                    }
+                    //System.out.println("property being sent via pli construction for " + item.getUuid() + " to player " + player.getName());
+                    //System.out.println(item.getProperties()[0]);
+                    items[0] = item;
+                    playerListItemUpdate.setItems(items);
+                    playerListItemUpdate.setActions(EnumSet.of(PlayerListItemUpdate.Action.ADD_PLAYER, PlayerListItemUpdate.Action.UPDATE_LISTED));
+                    if(player.getPendingConnection().getVersion() >= 764) {
+                        try {
+                            ((UserConnection) player).sendPacketQueued(playerListItemUpdate);
+                        } catch (Exception ignored) {
+
+                        }
+                    } else {
+                        player.unsafe().sendPacket(playerListItemUpdate);
+                    }
                 }
-                item.setPing(0);
-                items[0] = item;
-                playerListItemUpdate.setItems(items);
-                playerListItemUpdate.setActions(EnumSet.of(PlayerListItemUpdate.Action.ADD_PLAYER, PlayerListItemUpdate.Action.UPDATE_LISTED));
-                player.unsafe().sendPacket(playerListItemUpdate);
             } else if(action.equals(PlayerListItem.Action.REMOVE_PLAYER)) {
                 PlayerListItemRemove playerListItemRemove = new PlayerListItemRemove();
                 UUID uuids[] = new UUID[1];
                 item.setPublicKey(null);
+                //if(plugin.playerSkins.containsKey(item.getUuid())) item.setProperties(plugin.playerSkins.get(item.getUuid()));
                 uuids[0] = item.getUuid();
                 playerListItemRemove.setUuids(uuids);
-                player.unsafe().sendPacket(playerListItemRemove);
+                if(player.getPendingConnection().getVersion() >= 764) {
+                    try {
+                        ((UserConnection) player).sendPacketQueued(playerListItemRemove);
+                    } catch (Exception ignored) {
+
+                    }
+                } else {
+                    player.unsafe().sendPacket(playerListItemRemove);
+                }
             } else if(action.equals(PlayerListItem.Action.UPDATE_GAMEMODE)) {
                 if(item.getUuid().equals(player.getUniqueId())) {
                     PlayerListItemUpdate playerListItemUpdate = new PlayerListItemUpdate();
@@ -222,6 +260,7 @@ public class CVTabList extends TabList
                         item.setListed(true);
                     }
                     item.setPublicKey(null);
+                    //if(plugin.playerSkins.containsKey(item.getUuid())) item.setProperties(plugin.playerSkins.get(item.getUuid()));
                     if(!item.getUuid().equals(player.getUniqueId())) {
                         item.setGamemode(1);
                     } else if(item.getGamemode() != null) {
@@ -235,7 +274,15 @@ public class CVTabList extends TabList
                     items[0] = item;
                     playerListItemUpdate.setItems(items);
                     playerListItemUpdate.setActions(EnumSet.of(PlayerListItemUpdate.Action.UPDATE_GAMEMODE));
-                    player.unsafe().sendPacket(playerListItemUpdate);
+                    if(player.getPendingConnection().getVersion() >= 764) {
+                        try {
+                            ((UserConnection) player).sendPacketQueued(playerListItemUpdate);
+                        } catch (Exception ignored) {
+
+                        }
+                    } else {
+                        player.unsafe().sendPacket(playerListItemUpdate);
+                    }
                 }
             }
         }
@@ -363,6 +410,14 @@ public class CVTabList extends TabList
                                 //playerAddPacketsLock.unlock();
                                 lck = false;
 
+                                if(item.getProperties() != null) {
+                                    //System.out.println("pli passthrough for " + item.getUuid() + " to player " + player.getName());
+                                    //System.out.println(item.getProperties()[0]);
+                                    String[] propArray = new String[2];
+                                    propArray[0] = item.getProperties()[0].getValue();
+                                    propArray[1] = item.getProperties()[0].getSignature();
+                                    plugin.playerSkinTextures.put(item.getUuid(), propArray);
+                                }
                                 plugin.addPacketAvailable(item.getUuid());
                             }
                                 //}
