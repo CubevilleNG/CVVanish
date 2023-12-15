@@ -46,6 +46,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
     private CVIPC ipc;
     private IOpenInv openInv;
     private ProtocolManager protocolManager;
+    private SAFunManager saFunManager;
     
     private Set<UUID> invertedVisibility = new HashSet<>();
     private Set<UUID> pickupInvertedPlayers = new HashSet<>();
@@ -78,6 +79,7 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
 	}
 
         protocolManager = ProtocolLibrary.getProtocolManager();
+        this.saFunManager = new SAFunManager(this, protocolManager);
         petListener();
 	
         interactDisallowedMaterials.add(Material.ACACIA_PRESSURE_PLATE);
@@ -387,6 +389,10 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
                         p.showPlayer(this, player); // TODO: different signature in 1.15
                     }
                 }
+                if(!invis) {
+                    if(player.hasPermission("cvvanish.safun.bats")) saFunManager.executeBats(player);
+                    if(player.hasPermission("cvvanish.safun.lightning")) saFunManager.executeLightning(player);
+                }
             }
             if(openInv != null) openInv.setPlayerSilentChestStatus(player, invis);
             if(invis) {
@@ -474,8 +480,8 @@ public class CVVanish extends JavaPlugin implements IPCInterface, Listener {
                     for(Player p: Bukkit.getServer().getOnlinePlayers()) {
                         if(!p.getUniqueId().equals(player.getUniqueId())) {
                             if(p.canSee(player)) {
-                                p.hidePlayer(player);
-                                p.showPlayer(player);
+                                p.hidePlayer(CVVanish.this, player);
+                                p.showPlayer(CVVanish.this, player);
                             }
                         }
                     }
