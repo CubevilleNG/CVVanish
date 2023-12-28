@@ -64,7 +64,7 @@ public class SAFunBats {
             if(p.getWorld().equals(pLoc.getWorld())) {
                 if(pLoc.distance(p.getLocation()) <= 50) {
                     for(int i = 0; i <= amount; i++) {
-                        plugin.getServer().getScheduler().runTaskLater(plugin, () -> p.playSound(p.getLocation(), Sound.ENTITY_BAT_AMBIENT, SoundCategory.MASTER, 1.0F, 1.0F), 4L * i);
+                        plugin.getServer().getScheduler().runTaskLater(plugin, () -> p.playSound(p.getLocation(), Sound.ENTITY_BAT_AMBIENT, SoundCategory.MASTER, 0.5F, 1.0F), 4L * i);
                     }
                 }
             }
