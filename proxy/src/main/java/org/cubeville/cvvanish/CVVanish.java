@@ -21,11 +21,10 @@ import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.YamlConfiguration;
 import net.md_5.bungee.event.EventHandler;
 
-import net.md_5.bungee.protocol.Property;
 import org.cubeville.cvipc.CVIPC;
 import org.cubeville.cvipc.IPCInterface;
 
-import org.cubeville.cvplayerdata.playerdata.PlayerDataManager;
+import org.cubeville.cvplayerdata.PlayerDataManager;
 import org.cubeville.cvvanish.teams.TeamHandler;
 import org.cubeville.cvvanish.teams.TeamManager;
 
@@ -185,7 +184,6 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
     @EventHandler
     public void onServerSwitch(ServerSwitchEvent event) {
         ProxiedPlayer p = event.getPlayer();
-        teamHandler.init(p);
         if(teamEnabledServers.contains(p.getServer().getInfo().getName().toLowerCase())) {
             CVTabList.getInstanceFor(p.getUniqueId()).sendRealNamesToPlayer();
             for(UUID uuid : connectedPlayers) {
@@ -212,6 +210,8 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
 
         //TODO this ensures the player has been connected for less than 10 seconds
         if((System.currentTimeMillis() / 1000L) - loginTime.get(event.getPlayer().getUniqueId()) < 10) addPacketAvailable(event.getPlayer().getUniqueId());
+
+        teamHandler.init(p);
     }
 
     /*public void teamsServerLogic(ServerInfo from, ProxiedPlayer player) {
