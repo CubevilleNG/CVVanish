@@ -184,6 +184,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
     @EventHandler
     public void onServerSwitch(ServerSwitchEvent event) {
         ProxiedPlayer p = event.getPlayer();
+        teamHandler.init(p);
         if(teamEnabledServers.contains(p.getServer().getInfo().getName().toLowerCase())) {
             CVTabList.getInstanceFor(p.getUniqueId()).sendRealNamesToPlayer();
             for(UUID uuid : connectedPlayers) {
@@ -210,8 +211,6 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
 
         //TODO this ensures the player has been connected for less than 10 seconds
         if((System.currentTimeMillis() / 1000L) - loginTime.get(event.getPlayer().getUniqueId()) < 10) addPacketAvailable(event.getPlayer().getUniqueId());
-
-        teamHandler.init(p);
     }
 
     /*public void teamsServerLogic(ServerInfo from, ProxiedPlayer player) {
