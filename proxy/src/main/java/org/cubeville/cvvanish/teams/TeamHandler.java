@@ -6,16 +6,21 @@ import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
+import net.md_5.bungee.api.scheduler.ScheduledTask;
 import net.md_5.bungee.api.score.Team;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
+import net.md_5.bungee.protocol.DefinedPacket;
 import net.md_5.bungee.protocol.Either;
+import net.md_5.bungee.protocol.packet.PlayerListItemUpdate;
+import org.cubeville.cvvanish.CVTabList;
 import org.cubeville.cvvanish.CVVanish;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class TeamHandler {
 
@@ -25,11 +30,14 @@ public class TeamHandler {
     public HashMap<String, HashMap<String, String>> serverTeamConfig;
     public final HashMap<UUID, HashMap<String, String>> playerTeamConfig;
 
+    public HashMap<UUID, HashMap<UUID, List<ScheduledTask>>> queuedTeamsPacketTasks;
+
     public TeamHandler(CVVanish plugin, TeamManager teamManager) {
         this.plugin = plugin;
         this.teamManager = teamManager;
         this.serverTeamConfig = new HashMap<>();
         this.playerTeamConfig = new HashMap<>();
+        this.queuedTeamsPacketTasks = new HashMap<>();
         updateServerTeamConfig();
     }
 
@@ -137,15 +145,7 @@ public class TeamHandler {
                         String newPrefix = ChatColor.of(color) + "§m" + oldPrefix;
                         newTeam.setPrefix(Either.right(TextComponent.fromLegacy(newPrefix)));
                         //newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
-                        if(player.getPendingConnection().getVersion() >= 764) {
-                            try {
-                                ((UserConnection) player).sendPacketQueued(newTeam);
-                            } catch (Exception ignored) {
-
-                            }
-                        } else {
-                            player.unsafe().sendPacket(newTeam);
-                        }
+                        executePacket(player, newTeam);
                         //System.out.println("sending strikethrough packet of " + p.getName() + " to " + player.getName());
                     }
                 } else if(plugin.isPlayerInvisible(p.getUniqueId())) {
@@ -159,15 +159,7 @@ public class TeamHandler {
                         //newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + oldPrefix)));
                         //System.out.println("sending normal packet of " + p.getName() + " to " + player.getName());
                     }
-                    if(player.getPendingConnection().getVersion() >= 764) {
-                        try {
-                            ((UserConnection) player).sendPacketQueued(newTeam);
-                        } catch (Exception ignored) {
-
-                        }
-                    } else {
-                        player.unsafe().sendPacket(newTeam);
-                    }
+                    executePacket(player, newTeam);
                 } else if(p.hasPermission("cvvanish.prefix.helper") && !modOrHigher(p)){
                     if(!player.hasPermission("cvvanish.prefix.helper") && !modOrHigher(player)) {
                         color = "#FFFFFF";
@@ -175,28 +167,12 @@ public class TeamHandler {
                     }
                     newTeam.setPrefix(Either.right(TextComponent.fromLegacy(ChatColor.of(color) + oldPrefix)));
                     //newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + oldPrefix)));
-                    if(player.getPendingConnection().getVersion() >= 764) {
-                        try {
-                            ((UserConnection) player).sendPacketQueued(newTeam);
-                        } catch (Exception ignored) {
-
-                        }
-                    } else {
-                        player.unsafe().sendPacket(newTeam);
-                    }
+                    executePacket(player, newTeam);
                 } else {
                     //System.out.println(p.getName() + " is neither invisible nor unlisted");
                     newTeam.setPrefix(Either.right(TextComponent.fromLegacy(ChatColor.of(color) + oldPrefix)));
                     //newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + oldPrefix)));
-                    if(player.getPendingConnection().getVersion() >= 764) {
-                        try {
-                            ((UserConnection) player).sendPacketQueued(newTeam);
-                        } catch (Exception ignored) {
-
-                        }
-                    } else {
-                        player.unsafe().sendPacket(newTeam);
-                    }
+                    executePacket(player, newTeam);
                     //System.out.println("sending normal packet of " + p.getName() + " to " + player.getName());
                 }
             }
@@ -227,15 +203,7 @@ public class TeamHandler {
                         String newPrefix = ChatColor.of(color) + "§m" + oldPrefix;
                         newTeam.setPrefix(Either.right(TextComponent.fromLegacy(newPrefix)));
                         //newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
-                        if(p.getPendingConnection().getVersion() >= 764) {
-                            try {
-                                ((UserConnection) p).sendPacketQueued(newTeam);
-                            } catch (Exception ignored) {
-
-                            }
-                        } else {
-                            p.unsafe().sendPacket(newTeam);
-                        }
+                        executePacket(p, newTeam);
                         //System.out.println("sending strikethrough packet of " + player.getName() + " to " + p.getName());
                     }
                 } else if(plugin.isPlayerInvisible(player.getUniqueId())) {
@@ -244,28 +212,12 @@ public class TeamHandler {
                         String newPrefix = ChatColor.of(color) + "§o" + oldPrefix;
                         newTeam.setPrefix(Either.right(TextComponent.fromLegacy(newPrefix)));
                         //newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
-                        if(p.getPendingConnection().getVersion() >= 764) {
-                            try {
-                                ((UserConnection) p).sendPacketQueued(newTeam);
-                            } catch (Exception ignored) {
-
-                            }
-                        } else {
-                            p.unsafe().sendPacket(newTeam);
-                        }
+                        executePacket(p, newTeam);
                         //System.out.println("sending italics packet of " + player.getName() + " to " + p.getName());
                     } else {
                         newTeam.setPrefix(Either.right(TextComponent.fromLegacy(ChatColor.of(color) + oldPrefix)));
                         //newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + oldPrefix)));
-                        if(p.getPendingConnection().getVersion() >= 764) {
-                            try {
-                                ((UserConnection) p).sendPacketQueued(newTeam);
-                            } catch (Exception ignored) {
-
-                            }
-                        } else {
-                            p.unsafe().sendPacket(newTeam);
-                        }
+                        executePacket(p, newTeam);
                         //System.out.println("sending normal packet of " + player.getName() + " to " + p.getName());
                         //System.out.println("normal packet prefix is " + newTeam.getPrefix());
                     }
@@ -276,28 +228,12 @@ public class TeamHandler {
                     }
                     newTeam.setPrefix(Either.right(TextComponent.fromLegacy(ChatColor.of(color) + oldPrefix)));
                     //newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + oldPrefix)));
-                    if(p.getPendingConnection().getVersion() >= 764) {
-                        try {
-                            ((UserConnection) p).sendPacketQueued(newTeam);
-                        } catch (Exception ignored) {
-
-                        }
-                    } else {
-                        p.unsafe().sendPacket(newTeam);
-                    }
+                    executePacket(p, newTeam);
                 } else {
                     //System.out.println(player.getName() + " is neither invisible nor unlisted");
                     newTeam.setPrefix(Either.right(TextComponent.fromLegacy(ChatColor.of(color) + oldPrefix)));
                     //newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + oldPrefix)));
-                    if(p.getPendingConnection().getVersion() >= 764) {
-                        try {
-                            ((UserConnection) p).sendPacketQueued(newTeam);
-                        } catch (Exception ignored) {
-
-                        }
-                    } else {
-                        p.unsafe().sendPacket(newTeam);
-                    }
+                    executePacket(p, newTeam);
                     //System.out.println("sending normal packet of " + player.getName() + " to " + p.getName());
                 }
             }
@@ -308,15 +244,7 @@ public class TeamHandler {
         for(Team t : teamManager.getAllTeams()) {
             net.md_5.bungee.protocol.packet.Team team = getTeamPacket(t);
             team.setMode((byte) 1);
-            if(player.getPendingConnection().getVersion() >= 764) {
-                try {
-                    ((UserConnection) player).sendPacketQueued(team);
-                } catch (Exception ignored) {
-
-                }
-            } else {
-                player.unsafe().sendPacket(team);
-            }
+            executePacket(player, team);
         }
     }
 
@@ -324,15 +252,7 @@ public class TeamHandler {
         team.setMode((byte) 1);
         for(UUID uuid : plugin.getConnectedPlayers()) {
             ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
-            if(p.getPendingConnection().getVersion() >= 764) {
-                try {
-                    ((UserConnection) p).sendPacketQueued(team);
-                } catch (Exception ignored) {
-
-                }
-            } else {
-                p.unsafe().sendPacket(team);
-            }
+            executePacket(p, team);
         }
     }
 
@@ -342,27 +262,11 @@ public class TeamHandler {
             if(unlisted) {
                 if(canSenderSeePlayerState(uuid, player)) {
                     ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
-                    if(p.getPendingConnection().getVersion() >= 764) {
-                        try {
-                            ((UserConnection) p).sendPacketQueued(team);
-                        } catch (Exception ignored) {
-
-                        }
-                    } else {
-                        p.unsafe().sendPacket(team);
-                    }
+                    executePacket(p, team);
                 }
             } else {
                 ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
-                if(p.getPendingConnection().getVersion() >= 764) {
-                    try {
-                        ((UserConnection) p).sendPacketQueued(team);
-                    } catch (Exception ignored) {
-
-                    }
-                } else {
-                    p.unsafe().sendPacket(team);
-                }
+                executePacket(p, team);
             }
         }
     }
@@ -382,15 +286,7 @@ public class TeamHandler {
             ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
             net.md_5.bungee.protocol.packet.Team newTeam = createNewTeamPacket(team);
             if(canSenderSeePlayerState(p.getUniqueId(), player.getUniqueId())) {
-                if(p.getPendingConnection().getVersion() >= 764) {
-                    try {
-                        ((UserConnection) p).sendPacketQueued(newTeam);
-                    } catch (Exception ignored) {
-
-                    }
-                } else {
-                    p.unsafe().sendPacket(newTeam);
-                }
+                executePacket(p, newTeam);
             }
             String oldPrefix = newTeam.getPrefix().getRight().toLegacyText();
             //String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(newTeam.getPrefix()));
@@ -399,15 +295,7 @@ public class TeamHandler {
             newTeam.setPrefix(Either.right(TextComponent.fromLegacy(ChatColor.of(color) + oldPrefix)));
             //newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + oldPrefix)));
             newTeam.setMode((byte) 0);
-            if(p.getPendingConnection().getVersion() >= 764) {
-                try {
-                    ((UserConnection) p).sendPacketQueued(newTeam);
-                } catch (Exception ignored) {
-
-                }
-            } else {
-                p.unsafe().sendPacket(newTeam);
-            }
+            executePacket(p, newTeam);
             //System.out.println("sending normal packet of " + player.getName() + " to " + p.getName());
         }
     }
@@ -432,15 +320,7 @@ public class TeamHandler {
             oldPrefix = oldPrefix.substring(oldPrefix.indexOf("#") + 7);
             if(canSenderSeePlayerState(p.getUniqueId(), player.getUniqueId())) {
                 newTeam.setMode((byte) 1);
-                if(p.getPendingConnection().getVersion() >= 764) {
-                    try {
-                        ((UserConnection) p).sendPacketQueued(newTeam);
-                    } catch (Exception ignored) {
-
-                    }
-                } else {
-                    p.unsafe().sendPacket(newTeam);
-                }
+                executePacket(p, newTeam);
                 String newPrefix = ChatColor.of(color) + "§o" + oldPrefix;
                 newTeam.setPrefix(Either.right(TextComponent.fromLegacy(newPrefix)));
                 //newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(newPrefix)));
@@ -451,15 +331,7 @@ public class TeamHandler {
                 //System.out.println("sending normal packet of " + player.getName() + " to " + p.getName());
             }
             newTeam.setMode((byte) 0);
-            if(p.getPendingConnection().getVersion() >= 764) {
-                try {
-                    ((UserConnection) p).sendPacketQueued(newTeam);
-                } catch (Exception ignored) {
-
-                }
-            } else {
-                p.unsafe().sendPacket(newTeam);
-            }
+            executePacket(p, newTeam);
         }
     }
 
@@ -477,15 +349,7 @@ public class TeamHandler {
             team.setNameTagVisibility(teamConfig.get("nametags"));
             net.md_5.bungee.protocol.packet.Team newTeam = createNewTeamPacket(team);
             ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
-            if(p.getPendingConnection().getVersion() >= 764) {
-                try {
-                    ((UserConnection) p).sendPacketQueued(newTeam);
-                } catch (Exception ignored) {
-
-                }
-            } else {
-                p.unsafe().sendPacket(newTeam);
-            }
+            executePacket(p, newTeam);
             if(canSenderSeePlayerState(p.getUniqueId(), player.getUniqueId())) {
                 String oldPrefix = team.getPrefix().getRight().toLegacyText();
                 //String oldPrefix = TextComponent.toLegacyText(ComponentSerializer.parse(team.getPrefix()));
@@ -494,15 +358,7 @@ public class TeamHandler {
                 newTeam.setPrefix(Either.right(TextComponent.fromLegacy(ChatColor.of(color) + "§m" + oldPrefix)));
                 //newTeam.setPrefix(ComponentSerializer.toString(TextComponent.fromLegacyText(ChatColor.of(color) + "§m" + oldPrefix)));
                 newTeam.setMode((byte) 0);
-                if(p.getPendingConnection().getVersion() >= 764) {
-                    try {
-                        ((UserConnection) p).sendPacketQueued(newTeam);
-                    } catch (Exception ignored) {
-
-                    }
-                } else {
-                    p.unsafe().sendPacket(newTeam);
-                }
+                executePacket(p, newTeam);
                 //System.out.println("sending strikethrough packet of " + player.getName() + " to " + p.getName());
             }
         }
@@ -570,5 +426,71 @@ public class TeamHandler {
                 player.hasPermission("cvvanish.prefix.smod") ||
                 player.hasPermission("cvvanish.prefix.a") ||
                 player.hasPermission("cvvanish.prefix.sa");
+    }
+
+    private void executePacket(ProxiedPlayer player, net.md_5.bungee.protocol.packet.Team teamPacket) {
+        if(teamPacket.getPlayers().length == 0) return;
+        UUID teamUUID = teamManager.getRealNameUUID(teamPacket.getPlayers()[0]);
+        if(teamUUID == null) return;
+        if(waitForPLI(player, teamUUID)) {
+            if(player.getName().equalsIgnoreCase("ToeMan_")) System.out.println("initial waitForPLI for toeman and team packet " + teamPacket.getName());
+            UUID uuid = player.getUniqueId();
+            for(int i = 1; i <= 5; i++) {
+                List<ScheduledTask> tasks;
+                if(this.queuedTeamsPacketTasks.containsKey(uuid) && this.queuedTeamsPacketTasks.get(uuid).containsKey(teamUUID)) {
+                    tasks = this.queuedTeamsPacketTasks.get(uuid).get(teamUUID);
+                } else {
+                    tasks = new ArrayList<>();
+                }
+                ScheduledTask task = ProxyServer.getInstance().getScheduler().schedule(plugin, () -> {
+                    if(player.isConnected()) {
+                        if(!waitForPLI(player, teamUUID)) {
+                            if(player.getName().equalsIgnoreCase("ToeMan_")) System.out.println("sending team packet to toeman and team packet " + teamPacket.getName());
+                            sendPacket(player, teamPacket);
+                            cancelQueuedTasks(uuid, teamUUID);
+                        } else {
+                            if(player.getName().equalsIgnoreCase("ToeMan_")) System.out.println("another wait waitForPLI for toeman and team packet " + teamPacket.getName());
+                        }
+                    }
+                }, i, TimeUnit.SECONDS);
+                tasks.add(task);
+                HashMap<UUID, List<ScheduledTask>> teamTasks;
+                if(this.queuedTeamsPacketTasks.containsKey(uuid)) {
+                    teamTasks = this.queuedTeamsPacketTasks.get(uuid);
+                } else {
+                    teamTasks = new HashMap<>();
+                }
+                teamTasks.put(teamUUID, tasks);
+                this.queuedTeamsPacketTasks.put(uuid, teamTasks);
+            }
+        } else {
+            sendPacket(player, teamPacket);
+        }
+    }
+
+    private void sendPacket(ProxiedPlayer player, DefinedPacket packet) {
+        if(player.getPendingConnection().getVersion() >= 764) {
+            try {
+                ((UserConnection) player).sendPacketQueued(packet);
+            } catch (Exception ignored) {
+
+            }
+        } else {
+            player.unsafe().sendPacket(packet);
+        }
+    }
+
+    private boolean waitForPLI(ProxiedPlayer player, UUID pliUUID) {
+        return !CVTabList.getInstanceFor(player.getUniqueId()).hasReceivedPLI(pliUUID);
+    }
+
+    private void cancelQueuedTasks(UUID uuid, UUID teamUUID) {
+        if(this.queuedTeamsPacketTasks.containsKey(uuid) && this.queuedTeamsPacketTasks.get(uuid).containsKey(teamUUID)) {
+            List<ScheduledTask> teamTasks = new ArrayList<>(this.queuedTeamsPacketTasks.get(uuid).get(teamUUID));
+            for(ScheduledTask task : teamTasks) {
+                if(task != null) task.cancel();
+                this.queuedTeamsPacketTasks.get(uuid).get(teamUUID).remove(task);
+            }
+        }
     }
 }

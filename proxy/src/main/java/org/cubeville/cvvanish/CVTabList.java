@@ -6,7 +6,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.ConcurrentHashMap;
 
 import net.md_5.bungee.UserConnection;
-import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.protocol.Property;
@@ -19,6 +18,12 @@ import org.cubeville.cvvanish.teams.TeamManager;
 
 public class CVTabList extends TabList
 {
+    private final Set<UUID> receivedPLIs = new HashSet<>();
+    public boolean hasReceivedPLI(UUID uuid) { return this.receivedPLIs.contains(uuid); }
+    public void addReceivedPLI(UUID uuid) { this.receivedPLIs.add(uuid); }
+    public void removeReceivedPLI(UUID uuid) { this.receivedPLIs.remove(uuid); }
+    public void clearReceivedPLIs() { this.receivedPLIs.clear(); }
+
     private static Map<UUID, PlayerListItem.Item> playerAddPackets = new HashMap<>();
     private static Lock playerAddPacketsLock = new ReentrantLock();
 
@@ -86,15 +91,19 @@ public class CVTabList extends TabList
                     return;
                 }
                 item.setUsername(teamManager.getFakeName(item.getUuid()));
-                    sendSingleItemPacket(PlayerListItem.Action.ADD_PLAYER, item);
-                //}
-                /*finally {
-                    playerAddPacketsLock.unlock();
-                }*/
+                sendSingleItemPacket(PlayerListItem.Action.ADD_PLAYER, item);
+                if(player.getName().equalsIgnoreCase("toeman_")) {
+                    System.out.println("sending PLI ADD_PLAYER fake name packet to toeman_ for name: " + item.getUsername() + " displayname: " +
+                            item.getDisplayName() + " uuid: " + item.getUuid());
+                }
             } else {
                 PlayerListItem.Item item = createUuidItem(uuid);
                 item.setUsername(ProxyServer.getInstance().getPlayer(uuid).getName());
                 sendSingleItemPacket(PlayerListItem.Action.ADD_PLAYER, item);
+                if(player.getName().equalsIgnoreCase("toeman_")) {
+                    System.out.println("sending PLI ADD_PLAYER fake name packet to toeman_ for name: " + item.getUsername() + " displayname: " +
+                            item.getDisplayName() + " uuid: " + item.getUuid());
+                }
             }
         }
     }
@@ -196,6 +205,7 @@ public class CVTabList extends TabList
             } else {
                 player.unsafe().sendPacket(playerListItem);
             }
+            this.receivedPLIs.add(item.getUuid());
         } else {
             if(action.equals(PlayerListItem.Action.ADD_PLAYER)) {
                 if(!plugin.getConnectedPlayers().contains(item.getUuid()) || plugin.playerSkinTextures.containsKey(item.getUuid())) {
@@ -235,6 +245,7 @@ public class CVTabList extends TabList
                     } else {
                         player.unsafe().sendPacket(playerListItemUpdate);
                     }
+                    addReceivedPLI(item.getUuid());
                 }
             } else if(action.equals(PlayerListItem.Action.REMOVE_PLAYER)) {
                 PlayerListItemRemove playerListItemRemove = new PlayerListItemRemove();
@@ -252,6 +263,7 @@ public class CVTabList extends TabList
                 } else {
                     player.unsafe().sendPacket(playerListItemRemove);
                 }
+                addReceivedPLI(item.getUuid());
             } else if(action.equals(PlayerListItem.Action.UPDATE_GAMEMODE)) {
                 if(item.getUuid().equals(player.getUniqueId())) {
                     PlayerListItemUpdate playerListItemUpdate = new PlayerListItemUpdate();
@@ -295,8 +307,9 @@ public class CVTabList extends TabList
     }
     
     @Override
-    public void onUpdate(PlayerListItem playerListItem)
+    public void onUpdate(PlayerListItem playerListItem) //todo old?
     {
+        System.out.println("this is firing? ig it still does");
         if(playerListItem.getAction() == PlayerListItem.Action.UPDATE_LATENCY) return; // TODO ... well, or not, kinda more convenient
         //         playerListItem.getAction() == PlayerListItem.Action.UPDATE_GAMEMODE) return;
 
