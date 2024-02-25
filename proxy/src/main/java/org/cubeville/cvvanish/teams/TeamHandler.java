@@ -446,7 +446,7 @@ public class TeamHandler {
                     if(player.isConnected()) {
                         if(!waitForPLI(player, teamUUID)) {
                             if(player.getName().equalsIgnoreCase("ToeMan_")) System.out.println("sending team packet to toeman and team packet " + teamPacket.getName());
-                            sendPacket(player, teamPacket);
+                            finalSendPacket(player, teamPacket);
                             cancelQueuedTasks(uuid, teamUUID);
                         } else {
                             if(player.getName().equalsIgnoreCase("ToeMan_")) System.out.println("another wait waitForPLI for toeman and team packet " + teamPacket.getName());
@@ -464,19 +464,30 @@ public class TeamHandler {
                 this.queuedTeamsPacketTasks.put(uuid, teamTasks);
             }
         } else {
-            sendPacket(player, teamPacket);
+            finalSendPacket(player, teamPacket);
         }
     }
 
-    private void sendPacket(ProxiedPlayer player, DefinedPacket packet) {
-        if(player.getPendingConnection().getVersion() >= 764) {
-            try {
-                ((UserConnection) player).sendPacketQueued(packet);
-            } catch (Exception ignored) {
-
-            }
+    public boolean finalSendPacket(ProxiedPlayer player, DefinedPacket packet) {
+        UUID pUUID = player.getUniqueId();
+        if(plugin.getPDM().isPlayerAfk(pUUID)) {
+            if(!plugin.isPlayerAFK(pUUID)) plugin.setPlayerAFK(pUUID, true);
+            return false;
+        } else if(plugin.isPlayerAFK(pUUID)) {
+            plugin.setPlayerAFK(pUUID, false);
+            init(player);
+            return false;
         } else {
-            player.unsafe().sendPacket(packet);
+            if(player.getPendingConnection().getVersion() >= 764) {
+                try {
+                    ((UserConnection) player).sendPacketQueued(packet);
+                } catch (Exception ignored) {
+
+                }
+            } else {
+                player.unsafe().sendPacket(packet);
+            }
+            return true;
         }
     }
 

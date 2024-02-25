@@ -5,9 +5,9 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.ConcurrentHashMap;
 
-import net.md_5.bungee.UserConnection;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
+import net.md_5.bungee.protocol.DefinedPacket;
 import net.md_5.bungee.protocol.Property;
 import net.md_5.bungee.protocol.packet.PlayerListItem;
 import net.md_5.bungee.protocol.packet.PlayerListItemRemove;
@@ -18,6 +18,13 @@ import org.cubeville.cvvanish.teams.TeamManager;
 
 public class CVTabList extends TabList
 {
+    private LinkedList<DefinedPacket> queuedPackets = new LinkedList<>();
+    public void sendQueuedPackets() {
+        for(DefinedPacket packet : queuedPackets) {
+            teamHandler.finalSendPacket(player, packet);
+        }
+    }
+
     private final Set<UUID> receivedPLIs = new HashSet<>();
     public boolean hasReceivedPLI(UUID uuid) { return this.receivedPLIs.contains(uuid); }
     public void addReceivedPLI(UUID uuid) { this.receivedPLIs.add(uuid); }
@@ -196,16 +203,12 @@ public class CVTabList extends TabList
             PlayerListItem.Item items[] = new PlayerListItem.Item[1];
             items[0] = item;
             playerListItem.setItems(items);
-            if(player.getPendingConnection().getVersion() >= 764) {
-                try {
-                    ((UserConnection) player).sendPacketQueued(playerListItem);
-                } catch (Exception ignored) {
-
-                }
+            boolean sent = teamHandler.finalSendPacket(player, playerListItem);
+            if(sent) {
+                this.receivedPLIs.add(item.getUuid());
             } else {
-                player.unsafe().sendPacket(playerListItem);
+                this.queuedPackets.add(playerListItem);
             }
-            this.receivedPLIs.add(item.getUuid());
         } else {
             if(action.equals(PlayerListItem.Action.ADD_PLAYER)) {
                 if(!plugin.getConnectedPlayers().contains(item.getUuid()) || plugin.playerSkinTextures.containsKey(item.getUuid())) {
@@ -236,16 +239,12 @@ public class CVTabList extends TabList
                     items[0] = item;
                     playerListItemUpdate.setItems(items);
                     playerListItemUpdate.setActions(EnumSet.of(PlayerListItemUpdate.Action.ADD_PLAYER, PlayerListItemUpdate.Action.UPDATE_LISTED));
-                    if(player.getPendingConnection().getVersion() >= 764) {
-                        try {
-                            ((UserConnection) player).sendPacketQueued(playerListItemUpdate);
-                        } catch (Exception ignored) {
-
-                        }
+                    boolean sent = teamHandler.finalSendPacket(player, playerListItemUpdate);
+                    if(sent) {
+                        addReceivedPLI(item.getUuid());
                     } else {
-                        player.unsafe().sendPacket(playerListItemUpdate);
+                        this.queuedPackets.add(playerListItemUpdate);
                     }
-                    addReceivedPLI(item.getUuid());
                 }
             } else if(action.equals(PlayerListItem.Action.REMOVE_PLAYER)) {
                 PlayerListItemRemove playerListItemRemove = new PlayerListItemRemove();
@@ -254,16 +253,12 @@ public class CVTabList extends TabList
                 //if(plugin.playerSkins.containsKey(item.getUuid())) item.setProperties(plugin.playerSkins.get(item.getUuid()));
                 uuids[0] = item.getUuid();
                 playerListItemRemove.setUuids(uuids);
-                if(player.getPendingConnection().getVersion() >= 764) {
-                    try {
-                        ((UserConnection) player).sendPacketQueued(playerListItemRemove);
-                    } catch (Exception ignored) {
-
-                    }
+                boolean sent = teamHandler.finalSendPacket(player, playerListItemRemove);
+                if(sent) {
+                    addReceivedPLI(item.getUuid());
                 } else {
-                    player.unsafe().sendPacket(playerListItemRemove);
+                    this.queuedPackets.add(playerListItemRemove);
                 }
-                addReceivedPLI(item.getUuid());
             } else if(action.equals(PlayerListItem.Action.UPDATE_GAMEMODE)) {
                 if(item.getUuid().equals(player.getUniqueId())) {
                     PlayerListItemUpdate playerListItemUpdate = new PlayerListItemUpdate();
@@ -286,15 +281,8 @@ public class CVTabList extends TabList
                     items[0] = item;
                     playerListItemUpdate.setItems(items);
                     playerListItemUpdate.setActions(EnumSet.of(PlayerListItemUpdate.Action.UPDATE_GAMEMODE));
-                    if(player.getPendingConnection().getVersion() >= 764) {
-                        try {
-                            ((UserConnection) player).sendPacketQueued(playerListItemUpdate);
-                        } catch (Exception ignored) {
-
-                        }
-                    } else {
-                        player.unsafe().sendPacket(playerListItemUpdate);
-                    }
+                    boolean sent = teamHandler.finalSendPacket(player, playerListItemUpdate);
+                    if(!sent) this.queuedPackets.add(playerListItemUpdate);
                 }
             }
         }

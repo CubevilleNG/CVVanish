@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.TimeUnit;
 
 import net.md_5.bungee.UserConnection;
 import net.md_5.bungee.api.ProxyServer;
@@ -60,6 +61,8 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
     public List<String> teamEnabledServers;
 
     public Map<UUID, String[]> playerSkinTextures;
+
+    public Set<UUID> afkPlayers;
     
     @Override
     public void onEnable() {
@@ -100,8 +103,40 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         teamEnabledServers.add("ptown");
 
         playerSkinTextures = new HashMap<>();
+        afkPlayers = new HashSet<>();
+        startAfkChecker();
 
         playerDataManager = PlayerDataManager.getInstance();
+    }
+
+    private void startAfkChecker() {
+        ProxyServer.getInstance().getScheduler().schedule(this, () -> {
+            Set<UUID> copyAfkPlayers = new HashSet<>(afkPlayers);
+            for(UUID uuid : copyAfkPlayers) {
+                if(!playerDataManager.isPlayerAfk(uuid)) {
+                    setPlayerAFK(uuid, false);
+                    teamHandler.init(ProxyServer.getInstance().getPlayer(uuid));
+                    CVTabList.getInstanceFor(uuid).sendQueuedPackets();
+                }
+            }
+        }, 1, 1, TimeUnit.SECONDS);
+    }
+
+    public boolean isPlayerAFK(UUID uuid) {
+        return afkPlayers.contains(uuid);
+    }
+
+    public void setPlayerAFK(UUID uuid, boolean isAFK) {
+        if(isAFK) {
+            afkPlayers.add(uuid);
+        } else {
+            afkPlayers.remove(uuid);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerLogout(PlayerDisconnectEvent event) {
+        setPlayerAFK(event.getPlayer().getUniqueId(), false);
     }
 
     public TeamHandler getTeamHandler() {
