@@ -186,11 +186,11 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
         ProxiedPlayer p = event.getPlayer();
         if(CVTabList.getInstanceFor(p.getUniqueId()) != null) CVTabList.getInstanceFor(p.getUniqueId()).clearReceivedPLIs();
         teamHandler.init(p);
-        if(teamEnabledServers.contains(p.getServer().getInfo().getName().toLowerCase())) {
+        if(teamEnabledServers.contains(p.getServer().getInfo().getName())) {
             CVTabList.getInstanceFor(p.getUniqueId()).sendRealNamesToPlayer();
             for(UUID uuid : connectedPlayers) {
                 ProxiedPlayer player = ProxyServer.getInstance().getPlayer(uuid);
-                if(teamEnabledServers.contains(player.getServer().getInfo().getName().toLowerCase())) {
+                if(teamEnabledServers.contains(player.getServer().getInfo().getName())) {
                     CVTabList.getInstanceFor(player.getUniqueId()).sendRealNameToPlayer(p.getUniqueId());
                 }
             }
@@ -198,7 +198,7 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
             CVTabList.getInstanceFor(p.getUniqueId()).sendFakeNamesToPlayer();
             for(UUID uuid : connectedPlayers) {
                 ProxiedPlayer player = ProxyServer.getInstance().getPlayer(uuid);
-                if(teamEnabledServers.contains(player.getServer().getInfo().getName().toLowerCase())) {
+                if(teamEnabledServers.contains(player.getServer().getInfo().getName())) {
                     CVTabList.getInstanceFor(player.getUniqueId()).sendFakeNameToPlayer(p.getUniqueId());
                 }
             }

@@ -64,7 +64,7 @@ public class TeamHandler {
             Configuration servers = config.getSection("servers");
             Collection<ServerInfo> realServers = ProxyServer.getInstance().getServers().values();
             for(ServerInfo s : realServers) {
-                Configuration server = servers.getSection(s.getName().toLowerCase());
+                Configuration server = servers.getSection(s.getName());
                 String collision = "always";
                 String nametags = "always";
                 HashMap<String, String> teamConfig = new HashMap<>();
@@ -74,7 +74,7 @@ public class TeamHandler {
                 }
                 teamConfig.put("collision", collision);
                 teamConfig.put("nametags", nametags);
-                this.serverTeamConfig.put(s.getName().toLowerCase(), teamConfig);
+                this.serverTeamConfig.put(s.getName(), teamConfig);
             }
         } catch(IOException e) {
             System.out.println("Could not load configuration");

@@ -81,8 +81,8 @@ public class CVTabList extends TabList
     public void showPlayer(UUID uuid) {
         /*if(playerAddPackets.get(uuid) != null && player.getServer() != null && ProxyServer.getInstance().getPlayer(uuid) != null && ProxyServer.getInstance().getPlayer(uuid).getServer() != null) {*/
         if(player.getServer() != null && ProxyServer.getInstance().getPlayer(uuid) != null && ProxyServer.getInstance().getPlayer(uuid).getServer() != null) {
-            if(!(plugin.getTeamEnabledServers().contains(player.getServer().getInfo().getName().toLowerCase()) &&
-                    plugin.getTeamEnabledServers().contains(ProxyServer.getInstance().getPlayer(uuid).getServer().getInfo().getName().toLowerCase()))) {
+            if(!(plugin.getTeamEnabledServers().contains(player.getServer().getInfo().getName()) &&
+                    plugin.getTeamEnabledServers().contains(ProxyServer.getInstance().getPlayer(uuid).getServer().getInfo().getName()))) {
                 /*playerAddPacketsLock.lock();*/
                 //try {
                 PlayerListItem.Item item = createUuidItem(uuid);
@@ -110,7 +110,7 @@ public class CVTabList extends TabList
 
     public void sendRealNamesToPlayer() {
         for(ProxiedPlayer p : ProxyServer.getInstance().getPlayers()) {
-            if(p != null && plugin.getTeamEnabledServers().contains(p.getServer().getInfo().getName().toLowerCase())) {
+            if(p != null && plugin.getTeamEnabledServers().contains(p.getServer().getInfo().getName())) {
             /*if(p.getServer().getInfo().getName().equalsIgnoreCase(player.getServer().getInfo().getName())) {*/
                 if(!plugin.isPlayerUnlisted(p.getUniqueId()) || teamHandler.canSenderSeePlayerState(player.getUniqueId(), p.getUniqueId())) {
                     PlayerListItem.Item item = createUuidItem(p.getUniqueId());
