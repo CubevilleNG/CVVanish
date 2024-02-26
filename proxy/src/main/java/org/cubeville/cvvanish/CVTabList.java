@@ -18,11 +18,30 @@ import org.cubeville.cvvanish.teams.TeamManager;
 
 public class CVTabList extends TabList
 {
-    private LinkedList<DefinedPacket> queuedPackets = new LinkedList<>();
+    private LinkedHashMap<UUID, LinkedList<DefinedPacket>> queuedPackets = new LinkedHashMap<>();
     public void sendQueuedPackets() {
-        for(DefinedPacket packet : queuedPackets) {
-            teamHandler.finalSendPacket(player, packet);
+        for(LinkedList<DefinedPacket> packets : queuedPackets.values()) {
+            for(DefinedPacket packet : packets) {
+                if(packet instanceof PlayerListItem) {
+                    System.out.println("sending packet PlayerListItem that contains the following items with action " + ((PlayerListItem) packet).getAction());
+                    for(PlayerListItem.Item item : ((PlayerListItem) packet).getItems()) {
+                        System.out.println(item.getUuid());
+                    }
+                } else if(packet instanceof PlayerListItemUpdate) {
+                    System.out.println("sending packet PlayerListItemUpdate that contains the following items with the actions " + ((PlayerListItemUpdate) packet).getActions());
+                    for(PlayerListItem.Item item : ((PlayerListItemUpdate) packet).getItems()) {
+                        System.out.println(item.getUuid());
+                    }
+                } else if(packet instanceof PlayerListItemRemove) {
+                    System.out.println("sending packet PlayerListItemRemove that contains the following items");
+                    System.out.println(Arrays.toString(((PlayerListItemRemove) packet).getUuids()));
+                } else {
+                    System.out.println("sending a packet that shouldnt be here!?????");
+                }
+                teamHandler.finalSendPacket(player, packet);
+            }
         }
+        queuedPackets.clear();
     }
 
     private final Set<UUID> receivedPLIs = new HashSet<>();
@@ -186,15 +205,15 @@ public class CVTabList extends TabList
 
         int serverVersion = player.getPendingConnection().getVersion();
         if(serverVersion <= 758) {
-            PlayerListItem playerListItem = new PlayerListItem();
+            /*PlayerListItem playerListItem = new PlayerListItem();
             playerListItem.setAction(action);
             item.setPublicKey(null);
             if(!item.getUuid().equals(player.getUniqueId())) {
                 item.setGamemode(1);
             } else if(item.getGamemode() != null) {
 
-            /*} else if(playerAddPackets.get(item.getUuid()) != null) {
-                item.setGamemode(playerAddPackets.get(item.getUuid()).getGamemode());*/
+            *//*} else if(playerAddPackets.get(item.getUuid()) != null) {
+                item.setGamemode(playerAddPackets.get(item.getUuid()).getGamemode());*//*
             } else {
                 item.setGamemode(1);
             }
@@ -208,7 +227,7 @@ public class CVTabList extends TabList
                 this.receivedPLIs.add(item.getUuid());
             } else {
                 this.queuedPackets.add(playerListItem);
-            }
+            }*/
         } else {
             if(action.equals(PlayerListItem.Action.ADD_PLAYER)) {
                 if(!plugin.getConnectedPlayers().contains(item.getUuid()) || plugin.playerSkinTextures.containsKey(item.getUuid())) {
@@ -243,7 +262,18 @@ public class CVTabList extends TabList
                     if(sent) {
                         addReceivedPLI(item.getUuid());
                     } else {
-                        this.queuedPackets.add(playerListItemUpdate);
+                        LinkedList<DefinedPacket> packets;
+                        if(this.queuedPackets.containsKey(item.getUuid())) {
+                            if(this.queuedPackets.get(item.getUuid()).get(0) instanceof PlayerListItemUpdate) {
+                                packets = this.queuedPackets.get(item.getUuid());
+                            } else {
+                                packets = new LinkedList<>();
+                            }
+                        } else {
+                            packets = new LinkedList<>();
+                        }
+                        packets.add(playerListItemUpdate);
+                        this.queuedPackets.put(item.getUuid(), packets);
                     }
                 }
             } else if(action.equals(PlayerListItem.Action.REMOVE_PLAYER)) {
@@ -255,9 +285,12 @@ public class CVTabList extends TabList
                 playerListItemRemove.setUuids(uuids);
                 boolean sent = teamHandler.finalSendPacket(player, playerListItemRemove);
                 if(sent) {
-                    addReceivedPLI(item.getUuid());
+                    removeReceivedPLI(item.getUuid());
                 } else {
-                    this.queuedPackets.add(playerListItemRemove);
+                    this.queuedPackets.remove(item.getUuid());
+                    LinkedList<DefinedPacket> packets = new LinkedList<>();
+                    packets.add(playerListItemRemove);
+                    this.queuedPackets.put(item.getUuid(), packets);
                 }
             } else if(action.equals(PlayerListItem.Action.UPDATE_GAMEMODE)) {
                 if(item.getUuid().equals(player.getUniqueId())) {
@@ -282,7 +315,20 @@ public class CVTabList extends TabList
                     playerListItemUpdate.setItems(items);
                     playerListItemUpdate.setActions(EnumSet.of(PlayerListItemUpdate.Action.UPDATE_GAMEMODE));
                     boolean sent = teamHandler.finalSendPacket(player, playerListItemUpdate);
-                    if(!sent) this.queuedPackets.add(playerListItemUpdate);
+                    if(!sent) {
+                        LinkedList<DefinedPacket> packets;
+                        if(this.queuedPackets.containsKey(item.getUuid())) {
+                            if(this.queuedPackets.get(item.getUuid()).get(0) instanceof PlayerListItemUpdate) {
+                                packets = this.queuedPackets.get(item.getUuid());
+                            } else {
+                                packets = new LinkedList<>();
+                            }
+                        } else {
+                            packets = new LinkedList<>();
+                        }
+                        packets.add(playerListItemUpdate);
+                        this.queuedPackets.put(item.getUuid(), packets);
+                    }
                 }
             }
         }
