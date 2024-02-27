@@ -115,8 +115,9 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
             for(UUID uuid : copyAfkPlayers) {
                 if(!playerDataManager.isPlayerAfk(uuid)) {
                     setPlayerAFK(uuid, false);
+                    CVTabList.getInstanceFor(uuid).destroyReceivedPLIs();
+                    showExistingPlayers(uuid);
                     teamHandler.init(ProxyServer.getInstance().getPlayer(uuid));
-                    CVTabList.getInstanceFor(uuid).sendQueuedPackets();
                 }
             }
         }, 1, 1, TimeUnit.SECONDS);
@@ -209,8 +210,8 @@ public class CVVanish extends Plugin implements IPCInterface, Listener {
 
     public void showExistingPlayers(UUID uuid) {
         for(UUID connectedPlayer: connectedPlayers) {
-            if(!connectedPlayer.equals(uuid) &&
-                    (!unlistedPlayers.contains(connectedPlayer) || teamHandler.canSenderSeePlayerState(uuid, connectedPlayer))) {
+            if(/*!connectedPlayer.equals(uuid) &&
+                    */(!unlistedPlayers.contains(connectedPlayer) || teamHandler.canSenderSeePlayerState(uuid, connectedPlayer))) {
                 CVTabList.getInstanceFor(uuid).showPlayer(connectedPlayer);
             }
         }

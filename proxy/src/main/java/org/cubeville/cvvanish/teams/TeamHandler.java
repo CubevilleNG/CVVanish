@@ -475,7 +475,7 @@ public class TeamHandler {
             return false;
         } else if(plugin.isPlayerAFK(pUUID)) {
             plugin.setPlayerAFK(pUUID, false);
-            init(player);
+            //init(player);
             return false;
         } else {
             if(player.getPendingConnection().getVersion() >= 764) {
